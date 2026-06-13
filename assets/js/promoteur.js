@@ -3,7 +3,7 @@ window.onload = function() {
     var nom = localStorage.getItem("nom_connecte");
     
     if(!nom || role !== 'promoteur') {
-        window.location.href = "index.html";
+        window.location.href = "login.html";
         return;
     }
     

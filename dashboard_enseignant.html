@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MY LMS - Espace Enseignant</title>
-    <!-- Projet etudiant de ONANA GREGOIRE LEGRAND (24G2060) -->
+    <title>FONDA WORKPLACE - Espace Enseignant</title>
+    <!-- Teacher account (enseignant@lms.com / 1234) allows teachers to create courses, add/edit lessons (PDF, video), and use the class chat -->
+<!-- Projet etudiant de ONANA GREGOIRE LEGRAND (24G2060) -->
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
     <div class="navbar">
-        <h1>MY LMS</h1>
+        <h1>FONDA WORKPLACE</h1>
         <div style="display: flex; align-items: center; gap: 1rem;">
             <span id="nom_utilisateur" style="font-weight: bold;"></span>
             <button onclick="deconnexion()" class="btn-quitter">Déconnexion</button>
@@ -19,7 +20,9 @@
     <div class="contenu-principal">
         <h2>Gestion des Cours</h2>
         <p>Voici vos cours et leçons à gérer.</p>
-
+        <!-- Button to open the course creation modal -->
+        <button class="btn-ajouter-cours" onclick="ouvrirAjoutCours()" style="margin-bottom:10px; background:#28a745; color:white; border:none; padding:8px 12px; cursor:pointer; border-radius: 5px;">Ajouter un cours</button>
+        
         <div class="liste-cours" id="mes_cours">
             <div style="text-align:center; width: 100%;">
                 Chargement des cours...
@@ -30,7 +33,7 @@
     <!-- Modal pour les lecons -->
     <div id="lecon_modal" class="modal">
         <div class="modal-content" style="width: 80%; max-width: 800px;">
-            <span class="close-btn" onclick="fermerModal()">&times;</span>
+            <span class="close-btn" onclick="fermerModal('lecon_modal')">&times;</span>
             <h2 id="modal_titre">Gérer les leçons</h2>
             
             <div style="border-bottom: 1px solid #ccc; margin-bottom: 20px; padding-bottom: 20px;">
@@ -44,13 +47,13 @@
                     <div class="champ">
                         <label>Type :</label>
                         <select id="lecon_type" required>
-                            <option value="pdf">Fichier PDF (Lien)</option>
-                            <option value="video">Vidéo (Lien YouTube/MP4)</option>
+                            <option value="pdf">Document (PDF/DOCX)</option>
+                            <option value="video">Vidéo (MP4)</option>
                         </select>
                     </div>
                     <div class="champ">
-                        <label>URL du contenu :</label>
-                        <input type="url" id="lecon_url" required placeholder="https://...">
+                        <label>Fichier :</label>
+                        <input type="file" id="lecon_fichier" required accept=".pdf,.doc,.docx,.mp4">
                     </div>
                     <button type="submit">Ajouter</button>
                     <p id="lecon_msg"></p>
@@ -61,6 +64,48 @@
             <div id="modal_contenu">
                 <!-- Les leçons s'afficheront ici -->
             </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add Course -->
+    <div id="cours_modal" class="modal">
+        <div class="modal-content" style="width: 80%; max-width: 600px;">
+            <span class="close-btn" onclick="fermerModal('cours_modal')">&times;</span>
+            <h2 id="modal_titre_cours">Ajouter un cours</h2>
+            <form id="form_ajout_cours" onsubmit="ajouterCours(event)">
+                <div class="champ">
+                    <label>Titre du cours :</label>
+                    <input type="text" id="cours_titre" required>
+                </div>
+                <div class="champ">
+                    <label>Description :</label>
+                    <textarea id="cours_description" required></textarea>
+                </div>
+                <button type="submit">Ajouter</button>
+                <p id="cours_msg"></p>
+            </form>
+        </div>
+    </div>
+
+
+
+    <!-- Modal pour le chat (Classe) -->
+    <div id="chat_modal" class="modal">
+        <div class="modal-content" style="width: 80%; max-width: 600px;">
+            <span class="close-btn" onclick="fermerModal('chat_modal')">&times;</span>
+            <h2 id="chat_titre">Classe : Chat</h2>
+            
+            <div id="chat_messages" style="height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; background: #fafafa;">
+                <!-- Messages affichés ici -->
+            </div>
+
+            <form onsubmit="envoyerMessage(event, 'enseignant')">
+                <input type="hidden" id="chat_cours_id">
+                <div style="display:flex; gap: 10px;">
+                    <input type="text" id="chat_input" required placeholder="Votre message..." style="flex:1; padding:10px; border:1px solid #ccc;">
+                    <button type="submit" style="padding:10px 20px; background:#0056b3; color:white; border:none; cursor:pointer;">Envoyer</button>
+                </div>
+            </form>
         </div>
     </div>
 

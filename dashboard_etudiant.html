@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MY LMS - Espace Étudiant</title>
+    <title>FONDA WORKPLACE - Espace Étudiant</title>
     <!-- Projet etudiant de ONANA GREGOIRE LEGRAND (24G2060) -->
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
     <div class="navbar">
-        <h1>MY LMS</h1>
+        <h1>FONDA WORKPLACE</h1>
         <div style="display: flex; align-items: center; gap: 1rem;">
             <span id="nom_utilisateur" style="font-weight: bold;"></span>
             <button onclick="deconnexion()" class="btn-quitter">Déconnexion</button>
@@ -30,11 +30,31 @@
     <!-- Modal pour les lecons -->
     <div id="lecon_modal" class="modal">
         <div class="modal-content" style="width: 80%; max-width: 800px;">
-            <span class="close-btn" onclick="fermerModal()">&times;</span>
+            <span class="close-btn" onclick="fermerModal('lecon_modal')">&times;</span>
             <h2 id="modal_titre">Titre du cours</h2>
             <div id="modal_contenu">
                 <!-- Les leçons s'afficheront ici -->
             </div>
+        </div>
+    </div>
+
+    <!-- Modal pour le chat (Classe) -->
+    <div id="chat_modal" class="modal">
+        <div class="modal-content" style="width: 80%; max-width: 600px;">
+            <span class="close-btn" onclick="fermerModal('chat_modal')">&times;</span>
+            <h2 id="chat_titre">Classe : Chat</h2>
+            
+            <div id="chat_messages" style="height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; background: #fafafa;">
+                <!-- Messages affichés ici -->
+            </div>
+
+            <form onsubmit="envoyerMessage(event, 'etudiant')">
+                <input type="hidden" id="chat_cours_id">
+                <div style="display:flex; gap: 10px;">
+                    <input type="text" id="chat_input" required placeholder="Votre message..." style="flex:1; padding:10px; border:1px solid #ccc;">
+                    <button type="submit" style="padding:10px 20px; background:#0056b3; color:white; border:none; cursor:pointer;">Envoyer</button>
+                </div>
+            </form>
         </div>
     </div>
 

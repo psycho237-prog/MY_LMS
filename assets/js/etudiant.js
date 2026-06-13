@@ -8,7 +8,7 @@ window.onload = function() {
     var nom = localStorage.getItem("nom_connecte");
     
     if(!nom || role !== 'etudiant') {
-        window.location.href = "index.html";
+        window.location.href = "login.html";
         return;
     }
     
@@ -36,6 +36,7 @@ async function afficherCours() {
             html += "<h3>" + cours.titre + "</h3>";
             html += "<p>" + cours.description + "</p>";
             html += "<button class='btn-cours' onclick='ouvrirCours(" + cours.id + ", \"" + cours.titre + "\")'>Ouvrir le cours</button>";
+            html += "<button class='btn-cours' style='background-color:#ff9800; margin-top:5px;' onclick='ouvrirChat(" + cours.id + ", \"" + cours.titre + "\")'>Classe (Chat)</button>";
             html += "</div>";
             conteneur.innerHTML += html; 
         });
@@ -69,7 +70,7 @@ async function ouvrirCours(id, titre) {
             if (lecon.type === 'video') {
                 html += "<a href='" + lecon.url_contenu + "' target='_blank' style='color:blue;'>Regarder la vidéo</a>";
             } else {
-                html += "<a href='" + lecon.url_contenu + "' target='_blank' style='color:blue;'>Lire le PDF</a>";
+                html += "<a href='" + lecon.url_contenu + "' target='_blank' style='color:blue;'>Lire le Document</a>";
             }
             html += "</li>";
         });
@@ -81,6 +82,56 @@ async function ouvrirCours(id, titre) {
     }
 }
 
-function fermerModal() {
-    document.getElementById("lecon_modal").style.display = "none";
+async function ouvrirChat(id, titre) {
+    document.getElementById("chat_cours_id").value = id;
+    document.getElementById("chat_titre").textContent = "Classe : " + titre;
+    document.getElementById("chat_modal").style.display = "block";
+    chargerMessages(id);
+    window.chatInterval = setInterval(() => chargerMessages(id), 5000);
+}
+
+async function chargerMessages(cours_id) {
+    var container = document.getElementById("chat_messages");
+    try {
+        let res = await fetch('api/chat.php?cours_id=' + cours_id);
+        let messages = await res.json();
+        let html = "";
+        messages.forEach(m => {
+            html += "<div style='margin-bottom: 8px;'>";
+            html += "<strong style='color:#0056b3;'>" + m.nom_user + "</strong> ";
+            html += "<span style='font-size:0.8em; color:#999;'>(" + m.date_envoi + ")</span><br>";
+            html += m.message;
+            html += "</div>";
+        });
+        container.innerHTML = html;
+        container.scrollTop = container.scrollHeight;
+    } catch(e) {}
+}
+
+async function envoyerMessage(event, roleStr) {
+    event.preventDefault();
+    let cours_id = document.getElementById("chat_cours_id").value;
+    let input = document.getElementById("chat_input");
+    let msg = input.value;
+    
+    let user_id = localStorage.getItem("id_connecte");
+    let nom_user = localStorage.getItem("nom_connecte");
+
+    try {
+        let res = await fetch('api/chat.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ cours_id: cours_id, user_id: user_id, nom_user: nom_user, message: msg })
+        });
+        let data = await res.json();
+        if(data.success) {
+            input.value = "";
+            chargerMessages(cours_id);
+        }
+    } catch(e) {}
+}
+
+function fermerModal(modalId) {
+    document.getElementById(modalId).style.display = "none";
+    if(window.chatInterval) clearInterval(window.chatInterval);
 }

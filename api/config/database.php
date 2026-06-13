@@ -84,6 +84,17 @@ try {
             FOREIGN KEY (etudiant_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cours_id INTEGER,
+            user_id INTEGER,
+            nom_user TEXT,
+            message TEXT,
+            date_envoi DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (cours_id) REFERENCES cours(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
     ");
 
     // Ajout d'utilisateurs par défaut si la table est vide (Pratique pour tester sans rien installer)

@@ -117,5 +117,5 @@ function deconnexion() {
     localStorage.removeItem("id_connecte");
     localStorage.removeItem("nom_connecte");
     localStorage.removeItem("role_connecte");
-    window.location.href = "index.html";
+    window.location.href = "login.html";
 }

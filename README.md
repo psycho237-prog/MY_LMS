@@ -1,4 +1,4 @@
-# MY LMS - Plateforme d'Apprentissage Portable
+# FONDA WORKPLACE - Plateforme d'Apprentissage Portable
 
 Ce projet est un Système de Gestion de l'Apprentissage (LMS - Learning Management System) léger et ultra-portable développé en HTML, CSS, Vanilla JavaScript pour le frontend, et PHP/SQLite pour le backend.
 
@@ -49,7 +49,7 @@ Ce LMS a été spécifiquement codé pour être **100% portable**.
 ## 📂 Structure du Projet
 
 ```text
-MY_LMS/
+FONDA_WORKPLACE/
 ├── index.html                   # Page de connexion et d'inscription
 ├── dashboard_etudiant.html      # Tableau de bord : Vue Étudiant
 ├── dashboard_enseignant.html    # Tableau de bord : Vue Enseignant
