@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MY LMS - Espace Promoteur</title>
+    <!-- Projet etudiant de ONANA GREGOIRE LEGRAND (24G2060) -->
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div class="navbar">
+        <h1>MY LMS</h1>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <span id="nom_utilisateur" style="color: var(--text-muted); font-weight: 600;"></span>
+            <button onclick="deconnexion()" class="btn-quitter">Déconnexion</button>
+        </div>
+    </div>
+
+    <div class="contenu-principal">
+        <h2>Gestion des Modules</h2>
+        <p style="color: var(--text-muted);">Vue d'ensemble et statistiques.</p>
+
+        <div class="liste-cours" id="mes_cours">
+            <div style="text-align:center; grid-column: 1 / -1; color: var(--text-muted);">
+                Chargement des cours...
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/promoteur.js"></script>
+</body>
+</html>
