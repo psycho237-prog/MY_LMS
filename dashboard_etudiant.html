@@ -11,18 +11,29 @@
     <div class="navbar">
         <h1>MY LMS</h1>
         <div style="display: flex; align-items: center; gap: 1rem;">
-            <span id="nom_utilisateur" style="color: var(--text-muted); font-weight: 600;"></span>
+            <span id="nom_utilisateur" style="font-weight: bold;"></span>
             <button onclick="deconnexion()" class="btn-quitter">Déconnexion</button>
         </div>
     </div>
 
     <div class="contenu-principal">
         <h2>Mes Modules et Cours</h2>
-        <p style="color: var(--text-muted);">Voici les cours disponibles pour votre apprentissage.</p>
+        <p>Voici les cours disponibles pour votre apprentissage.</p>
 
         <div class="liste-cours" id="mes_cours">
-            <div style="text-align:center; grid-column: 1 / -1; color: var(--text-muted);">
+            <div style="text-align:center; width: 100%;">
                 Chargement des cours...
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour les lecons -->
+    <div id="lecon_modal" class="modal">
+        <div class="modal-content" style="width: 80%; max-width: 800px;">
+            <span class="close-btn" onclick="fermerModal()">&times;</span>
+            <h2 id="modal_titre">Titre du cours</h2>
+            <div id="modal_contenu">
+                <!-- Les leçons s'afficheront ici -->
             </div>
         </div>
     </div>

@@ -11,18 +11,55 @@
     <div class="navbar">
         <h1>MY LMS</h1>
         <div style="display: flex; align-items: center; gap: 1rem;">
-            <span id="nom_utilisateur" style="color: var(--text-muted); font-weight: 600;"></span>
+            <span id="nom_utilisateur" style="font-weight: bold;"></span>
             <button onclick="deconnexion()" class="btn-quitter">Déconnexion</button>
         </div>
     </div>
 
     <div class="contenu-principal">
         <h2>Gestion des Cours</h2>
-        <p style="color: var(--text-muted);">Voici vos cours et leçons à gérer.</p>
+        <p>Voici vos cours et leçons à gérer.</p>
 
         <div class="liste-cours" id="mes_cours">
-            <div style="text-align:center; grid-column: 1 / -1; color: var(--text-muted);">
+            <div style="text-align:center; width: 100%;">
                 Chargement des cours...
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour les lecons -->
+    <div id="lecon_modal" class="modal">
+        <div class="modal-content" style="width: 80%; max-width: 800px;">
+            <span class="close-btn" onclick="fermerModal()">&times;</span>
+            <h2 id="modal_titre">Gérer les leçons</h2>
+            
+            <div style="border-bottom: 1px solid #ccc; margin-bottom: 20px; padding-bottom: 20px;">
+                <h3>Ajouter une nouvelle leçon</h3>
+                <form id="form_ajout_lecon" onsubmit="ajouterLecon(event)">
+                    <input type="hidden" id="cours_id_actif">
+                    <div class="champ">
+                        <label>Titre de la leçon :</label>
+                        <input type="text" id="lecon_titre" required>
+                    </div>
+                    <div class="champ">
+                        <label>Type :</label>
+                        <select id="lecon_type" required>
+                            <option value="pdf">Fichier PDF (Lien)</option>
+                            <option value="video">Vidéo (Lien YouTube/MP4)</option>
+                        </select>
+                    </div>
+                    <div class="champ">
+                        <label>URL du contenu :</label>
+                        <input type="url" id="lecon_url" required placeholder="https://...">
+                    </div>
+                    <button type="submit">Ajouter</button>
+                    <p id="lecon_msg"></p>
+                </form>
+            </div>
+
+            <h3>Leçons existantes</h3>
+            <div id="modal_contenu">
+                <!-- Les leçons s'afficheront ici -->
             </div>
         </div>
     </div>
