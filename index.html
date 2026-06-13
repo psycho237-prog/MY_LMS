@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mon LMS - Connexion</title>
+    <!-- Auteur: ONANA GREGOIRE LEGRAND -->
+    <!-- Matricule: 24G2060 -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="boite-connexion">
+        <h2>Bienvenue sur MY LMS</h2>
+        <p>Veuillez vous connecter pour voir vos cours.</p>
+        
+        <form id="form_login" onsubmit="verifierConnexion(event)">
+            <div class="champ">
+                <label>Nom d'utilisateur :</label>
+                <input type="text" id="utilisateur" required placeholder="Ex: etudiant1">
+            </div>
+            
+            <div class="champ">
+                <label>Mot de passe :</label>
+                <input type="password" id="mdp" required placeholder="Essayez 1234">
+            </div>
+            
+            <p id="erreur_msg" style="color:red; display:none; font-size:14px;">Identifiants incorrects !</p>
+            
+            <button type="submit">Se connecter</button>
+        </form>
+        
+        <div class="footer">
+            Projet réalisé par ONANA GREGOIRE LEGRAND (24G2060)
+        </div>
+    </div>
+
+    <!-- On charge notre javascript a la fin -->
+    <script src="main.js"></script>
+</body>
+</html>

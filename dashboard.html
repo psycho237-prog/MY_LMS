@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>MY LMS - Mes Cours</title>
+    <!-- Projet etudiant de ONANA GREGOIRE LEGRAND (24G2060) -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="en-tete">
+        <h1>MY LMS - Espace Étudiant</h1>
+        <button onclick="deconnexion()" class="btn-quitter">Déconnexion</button>
+    </div>
+
+    <div class="contenu-principal">
+        <h2>Liste de mes cours</h2>
+        <p>Bonjour <span id="nom_etudiant" style="color:#007bff;">Étudiant</span>, voici les cours disponibles pour vous ce semestre.</p>
+
+        <div class="liste-cours" id="mes_cours">
+            <!-- Les cours seront ajoutes ici par la fonction javascript afficherCours() -->
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+    <script>
+        // On charge les cours des que la page est prete
+        window.onload = function() {
+            afficherCours();
+        };
+    </script>
+</body>
+</html>
