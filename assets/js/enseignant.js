@@ -124,11 +124,13 @@ async function ajouterLecon(event) {
 
         let uploadData = await uploadRes.json();
         let fileUrl = uploadData.secure_url; // Cloudinary renvoie l'URL sécurisée
+        let publicId = uploadData.public_id;
+        let resourceType = uploadData.resource_type;
 
         let res = await fetch('api/lecons.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ cours_id: cours_id, titre: titre, type: type, url_contenu: fileUrl })
+            body: JSON.stringify({ cours_id: cours_id, titre: titre, type: type, url_contenu: fileUrl, public_id: publicId, resource_type: resourceType })
         });
         let data = await res.json();
 

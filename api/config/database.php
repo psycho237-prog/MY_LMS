@@ -109,6 +109,13 @@ try {
         ");
     }
 
+    try {
+        $pdo->exec("ALTER TABLE lecons ADD COLUMN cloudinary_public_id TEXT");
+        $pdo->exec("ALTER TABLE lecons ADD COLUMN cloudinary_resource_type TEXT");
+    } catch(PDOException $e) {
+        // Les colonnes existent probablement déjà
+    }
+
 } catch(PDOException $e) {
     die(json_encode([
         "success" => false, 
