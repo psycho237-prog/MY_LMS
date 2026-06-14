@@ -14,9 +14,10 @@ window.onload = function() {
 async function afficherCours() {
     var conteneur = document.getElementById("mes_cours");
     if(!conteneur) return;
+    let id_enseignant = localStorage.getItem("id_connecte");
 
     try {
-        let res = await fetch('api/cours.php');
+        let res = await fetch('api/cours.php?enseignant_id=' + id_enseignant);
         let reponseAPI = await res.json();
 
         conteneur.innerHTML = ""; 
@@ -32,6 +33,7 @@ async function afficherCours() {
             html += "<p>" + cours.description + "</p>";
             html += "<button class='btn-cours' onclick='editerCours(" + cours.id + ", \"" + cours.titre + "\")'>Gérer les leçons</button>";
             html += "<button class='btn-cours' style='background-color:#ff9800; margin-top:5px;' onclick='ouvrirChat(" + cours.id + ", \"" + cours.titre + "\")'>Classe (Chat)</button>";
+            html += "<button class='btn-cours' style='background-color:#dc3545; margin-top:5px;' onclick='supprimerCours(" + cours.id + ")'>Supprimer</button>";
             html += "</div>";
             conteneur.innerHTML += html;
         });
@@ -66,7 +68,11 @@ async function chargerLeconsList(id) {
 
         let html = "<ul>";
         lecons.forEach(lecon => {
-            html += "<li style='margin-bottom:10px;'><strong>" + lecon.titre + "</strong> (" + lecon.type + ") - <a href='" + lecon.url_contenu + "' target='_blank'>Lien</a></li>";
+            html += "<li style='margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;'>";
+            html += "<span><strong>" + lecon.titre + "</strong> (" + lecon.type + ") - <a href='" + lecon.url_contenu + "' target='_blank'>Voir le contenu</a></span>";
+            html += "<div><button onclick='ouvrirQuiz(" + lecon.id + ", \"" + lecon.titre + "\")' style='margin-right:10px; background:#17a2b8; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px;'>Ajouter un quiz</button>";
+            html += "<button onclick='supprimerLecon(" + lecon.id + ", " + id + ")' style='background:#dc3545; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px;'>Supprimer</button></div>";
+            html += "</li>";
         });
         html += "</ul>";
         modalContenu.innerHTML = html;
@@ -93,20 +99,31 @@ async function ajouterLecon(event) {
     msg.style.color = "#0056b3";
     msg.textContent = "Téléchargement en cours...";
 
+    // === CONFIGURATION CLOUDINARY ===
+    const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dinntlvog/upload";
+    const CLOUDINARY_UPLOAD_PRESET = "lms_uploads";
+
     let formData = new FormData();
     formData.append("file", fichierInput.files[0]);
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+    // Optionnel: vous pouvez spécifier un dossier dans Cloudinary
+    // formData.append("folder", "lms_uploads");
 
     try {
-        let uploadRes = await fetch('api/upload.php', { method: 'POST', body: formData });
-        let uploadData = await uploadRes.json();
-
-        if (!uploadData.success) {
+        let uploadRes = await fetch(CLOUDINARY_URL, { 
+            method: 'POST', 
+            body: formData 
+        });
+        
+        if (!uploadRes.ok) {
+            let errorData = await uploadRes.json();
             msg.style.color = "red";
-            msg.textContent = uploadData.message;
+            msg.textContent = "Erreur Cloudinary: " + (errorData.error ? errorData.error.message : "Échec de l'upload");
             return;
         }
 
-        let fileUrl = uploadData.url;
+        let uploadData = await uploadRes.json();
+        let fileUrl = uploadData.secure_url; // Cloudinary renvoie l'URL sécurisée
 
         let res = await fetch('api/lecons.php', {
             method: 'POST',
@@ -120,6 +137,70 @@ async function ajouterLecon(event) {
             msg.textContent = "Leçon ajoutée !";
             document.getElementById("form_ajout_lecon").reset();
             chargerLeconsList(cours_id);
+        } else {
+            msg.style.color = "red";
+            msg.textContent = "Erreur : " + data.message;
+        }
+    } catch(err) {
+        msg.style.color = "red";
+        msg.textContent = "Erreur serveur.";
+    }
+}
+
+async function supprimerLecon(lecon_id, cours_id) {
+    if(!confirm("Voulez-vous vraiment supprimer cette leçon ?")) return;
+
+    try {
+        let res = await fetch('api/lecons.php?id=' + lecon_id, {
+            method: 'DELETE'
+        });
+        let data = await res.json();
+        if(data.success) {
+            chargerLeconsList(cours_id);
+        } else {
+            alert("Erreur: " + data.message);
+        }
+    } catch(e) {
+        alert("Erreur serveur lors de la suppression.");
+    }
+}
+
+function ouvrirQuiz(lecon_id, lecon_titre) {
+    document.getElementById("quiz_lecon_id").value = lecon_id;
+    document.getElementById("quiz_titre_modal").textContent = "Ajouter un quiz : " + lecon_titre;
+    document.getElementById("quiz_msg").textContent = "";
+    document.getElementById("form_ajout_quiz").reset();
+    document.getElementById("quiz_modal").style.display = "block";
+}
+
+async function ajouterQuiz(event) {
+    event.preventDefault();
+    let lecon_id = document.getElementById("quiz_lecon_id").value;
+    let titre = document.getElementById("quiz_titre").value;
+    let questionsStr = document.getElementById("quiz_questions").value;
+    let msg = document.getElementById("quiz_msg");
+    
+    let questionsObj;
+    try {
+        questionsObj = JSON.parse(questionsStr);
+    } catch(e) {
+        msg.style.color = "red";
+        msg.textContent = "Erreur: Le format JSON des questions est invalide.";
+        return;
+    }
+
+    try {
+        let res = await fetch('api/evaluations.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ lecon_id: lecon_id, titre: titre, questions: questionsObj })
+        });
+        let data = await res.json();
+
+        if (data.success) {
+            msg.style.color = "green";
+            msg.textContent = "Quiz ajouté avec succès !";
+            setTimeout(() => { fermerModal('quiz_modal'); }, 1500);
         } else {
             msg.style.color = "red";
             msg.textContent = "Erreur : " + data.message;
@@ -179,26 +260,56 @@ async function envoyerMessage(event, roleStr) {
     } catch(e) {}
 }
 
-function ouvrirAjoutCours() {
+async function supprimerCours(id) {
+    if(!confirm("Voulez-vous vraiment supprimer ce cours ? Toutes les leçons associées seront perdues.")) return;
+
+    try {
+        let res = await fetch('api/cours.php?id=' + id, {
+            method: 'DELETE'
+        });
+        let data = await res.json();
+        if(data.success) {
+            afficherCours();
+        } else {
+            alert("Erreur: " + data.message);
+        }
+    } catch(e) {
+        alert("Erreur serveur lors de la suppression.");
+    }
+}
+
+async function ouvrirAjoutCours() {
+    let select = document.getElementById('cours_module_id');
+    try {
+        let res = await fetch('api/modules.php');
+        let modules = await res.json();
+        select.innerHTML = '<option value="">Sélectionnez un module...</option>';
+        modules.forEach(m => {
+            select.innerHTML += '<option value="'+m.id+'">'+m.titre+'</option>';
+        });
+    } catch(e) {
+        select.innerHTML = '<option value="">Erreur de chargement des modules</option>';
+    }
     document.getElementById('cours_modal').style.display = "block";
 }
 
 async function ajouterCours(event) {
     event.preventDefault();
+    let module_id = document.getElementById('cours_module_id').value;
     let titre = document.getElementById('cours_titre').value.trim();
     let description = document.getElementById('cours_description').value.trim();
     let msg = document.getElementById('cours_msg');
     msg.textContent = "";
-    if (!titre || !description) {
+    if (!titre || !description || !module_id) {
         msg.style.color = "red";
-        msg.textContent = "Titre et description requis.";
+        msg.textContent = "Tous les champs sont requis.";
         return;
     }
     try {
         let res = await fetch('api/cours.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ module_id: 0, titre: titre, description: description, enseignant_id: localStorage.getItem('id_connecte') })
+            body: JSON.stringify({ module_id: module_id, titre: titre, description: description, enseignant_id: localStorage.getItem('id_connecte') })
         });
         let data = await res.json();
         if (data.success) {

@@ -19,6 +19,10 @@
     <div class="contenu-principal">
         <h2>Mes Modules et Cours</h2>
         <p>Voici les cours disponibles pour votre apprentissage.</p>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button class="btn-cours" style="background-color:#17a2b8;" onclick="afficherProgression()">Ma Progression et Notes</button>
+            <button class="btn-cours" style="background-color:#d4af37; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;" onclick="window.open('certificat.html', '_blank')">Obtenir mon Certificat</button>
+        </div>
 
         <div class="liste-cours" id="mes_cours">
             <div style="text-align:center; width: 100%;">
@@ -55,6 +59,16 @@
                     <button type="submit" style="padding:10px 20px; background:#0056b3; color:white; border:none; cursor:pointer;">Envoyer</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal pour la progression -->
+    <div id="progression_modal" class="modal">
+        <div class="modal-content" style="width: 80%; max-width: 600px;">
+            <span class="close-btn" onclick="fermerModal('progression_modal')">&times;</span>
+            <h2>Ma Progression et Notes</h2>
+            <div id="progression_contenu" style="margin-top: 15px;">
+            </div>
         </div>
     </div>
 

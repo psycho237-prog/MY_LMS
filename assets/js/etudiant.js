@@ -68,9 +68,11 @@ async function ouvrirCours(id, titre) {
             html += "<li style='margin-bottom: 15px;'>";
             html += "<strong>" + lecon.titre + "</strong> (" + lecon.type + ")<br>";
             if (lecon.type === 'video') {
-                html += "<a href='" + lecon.url_contenu + "' target='_blank' style='color:blue;'>Regarder la vidéo</a>";
+                html += "<a href='" + lecon.url_contenu + "' target='_blank' style='color:blue; margin-right: 10px; padding: 5px; background: #e9ecef; text-decoration: none; border-radius: 3px;'>Regarder la vidéo</a>";
+                html += "<a href='" + lecon.url_contenu + "' download target='_blank' style='color:white; padding: 5px; background: #28a745; text-decoration: none; border-radius: 3px;'>Télécharger</a>";
             } else {
-                html += "<a href='" + lecon.url_contenu + "' target='_blank' style='color:blue;'>Lire le Document</a>";
+                html += "<a href='" + lecon.url_contenu + "' target='_blank' style='color:blue; margin-right: 10px; padding: 5px; background: #e9ecef; text-decoration: none; border-radius: 3px;'>Lire le Document</a>";
+                html += "<a href='" + lecon.url_contenu + "' download target='_blank' style='color:white; padding: 5px; background: #28a745; text-decoration: none; border-radius: 3px;'>Télécharger</a>";
             }
             html += "</li>";
         });
@@ -134,4 +136,36 @@ async function envoyerMessage(event, roleStr) {
 function fermerModal(modalId) {
     document.getElementById(modalId).style.display = "none";
     if(window.chatInterval) clearInterval(window.chatInterval);
+}
+
+async function afficherProgression() {
+    let id_etudiant = localStorage.getItem("id_connecte");
+    var modal = document.getElementById("progression_modal");
+    var contenu = document.getElementById("progression_contenu");
+    modal.style.display = "block";
+    contenu.innerHTML = "Chargement...";
+    
+    try {
+        let res = await fetch('api/progression.php?etudiant_id=' + id_etudiant);
+        let progressions = await res.json();
+        
+        if (progressions.length === 0) {
+            contenu.innerHTML = "<p>Aucune progression enregistrée pour le moment.</p>";
+            return;
+        }
+        
+        let html = "<table style='width:100%; border-collapse: collapse;'>";
+        html += "<tr style='background:#f4f4f4;'><th>Leçon ID</th><th>Score</th><th>Date</th></tr>";
+        progressions.forEach(p => {
+            html += "<tr>";
+            html += "<td style='border:1px solid #ddd; padding:8px; text-align:center;'>" + p.lecon_id + "</td>";
+            html += "<td style='border:1px solid #ddd; padding:8px; text-align:center;'>" + p.score + "%</td>";
+            html += "<td style='border:1px solid #ddd; padding:8px; text-align:center;'>" + new Date(p.date_completion).toLocaleDateString() + "</td>";
+            html += "</tr>";
+        });
+        html += "</table>";
+        contenu.innerHTML = html;
+    } catch(err) {
+        contenu.innerHTML = "<p>Erreur lors du chargement de la progression.</p>";
+    }
 }

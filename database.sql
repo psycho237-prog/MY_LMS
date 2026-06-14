@@ -63,3 +63,23 @@ CREATE TABLE IF NOT EXISTS certificats (
     FOREIGN KEY (etudiant_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS inscriptions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    etudiant_id INT,
+    cours_id INT,
+    date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (etudiant_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (cours_id) REFERENCES cours(id) ON DELETE CASCADE,
+    UNIQUE(etudiant_id, cours_id)
+);
+
+CREATE TABLE IF NOT EXISTS resultats_evaluations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    etudiant_id INT,
+    evaluation_id INT,
+    score DECIMAL(5,2) NOT NULL,
+    date_passage DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (etudiant_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (evaluation_id) REFERENCES evaluations(id) ON DELETE CASCADE
+);

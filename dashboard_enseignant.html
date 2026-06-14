@@ -74,6 +74,12 @@
             <h2 id="modal_titre_cours">Ajouter un cours</h2>
             <form id="form_ajout_cours" onsubmit="ajouterCours(event)">
                 <div class="champ">
+                    <label>Module :</label>
+                    <select id="cours_module_id" required>
+                        <option value="">Sélectionnez un module...</option>
+                    </select>
+                </div>
+                <div class="champ">
                     <label>Titre du cours :</label>
                     <input type="text" id="cours_titre" required>
                 </div>
@@ -105,6 +111,28 @@
                     <input type="text" id="chat_input" required placeholder="Votre message..." style="flex:1; padding:10px; border:1px solid #ccc;">
                     <button type="submit" style="padding:10px 20px; background:#0056b3; color:white; border:none; cursor:pointer;">Envoyer</button>
                 </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal pour les quiz -->
+    <div id="quiz_modal" class="modal">
+        <div class="modal-content" style="width: 80%; max-width: 600px;">
+            <span class="close-btn" onclick="fermerModal('quiz_modal')">&times;</span>
+            <h2 id="quiz_titre_modal">Ajouter un quiz à la leçon</h2>
+            <form id="form_ajout_quiz" onsubmit="ajouterQuiz(event)">
+                <input type="hidden" id="quiz_lecon_id">
+                <div class="champ">
+                    <label>Titre du Quiz :</label>
+                    <input type="text" id="quiz_titre" required>
+                </div>
+                <div class="champ">
+                    <label>Questions (Format JSON) :</label>
+                    <textarea id="quiz_questions" required rows="6" placeholder='[{"q":"Quelle est la capitale ?","options":["Paris","Londres"],"reponse":"Paris"}]'></textarea>
+                    <small style="color: var(--text-muted);">Entrez les questions sous forme de tableau JSON valide.</small>
+                </div>
+                <button type="submit">Ajouter le quiz</button>
+                <p id="quiz_msg"></p>
             </form>
         </div>
     </div>

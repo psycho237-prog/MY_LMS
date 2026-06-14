@@ -23,5 +23,18 @@ if($method == 'GET') {
     } else {
         echo json_encode(["success" => false, "message" => "Données incomplètes"]);
     }
+} elseif($method == 'DELETE') {
+    $data = json_decode(file_get_contents("php://input"));
+    $id = isset($data->id) ? $data->id : (isset($_GET['id']) ? $_GET['id'] : null);
+    if($id) {
+        $stmt = $pdo->prepare("DELETE FROM lecons WHERE id = ?");
+        if($stmt->execute([$id])) {
+            echo json_encode(["success" => true, "message" => "Leçon supprimée"]);
+        } else {
+            echo json_encode(["success" => false, "message" => "Erreur de suppression"]);
+        }
+    } else {
+        echo json_encode(["success" => false, "message" => "ID manquant"]);
+    }
 }
 ?>
