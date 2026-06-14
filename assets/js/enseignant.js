@@ -1,7 +1,12 @@
+/**
+ * S'exécute au chargement de la page.
+ * Vérifie l'authentification et le rôle de l'utilisateur.
+ */
 window.onload = function() {
     var role = localStorage.getItem("role_connecte");
     var nom = localStorage.getItem("nom_connecte");
     
+    // Redirection si l'utilisateur n'est pas un enseignant
     if(!nom || role !== 'enseignant') {
         window.location.href = "login.html";
         return;
@@ -11,6 +16,9 @@ window.onload = function() {
     afficherCours();
 };
 
+/**
+ * Récupère et affiche la liste des cours créés par l'enseignant connecté.
+ */
 async function afficherCours() {
     var conteneur = document.getElementById("mes_cours");
     if(!conteneur) return;
@@ -81,6 +89,9 @@ async function chargerLeconsList(id) {
     }
 }
 
+/**
+ * Envoie un fichier sur Cloudinary et sauvegarde la leçon dans la base de données.
+ */
 async function ajouterLecon(event) {
     event.preventDefault();
     
@@ -149,6 +160,11 @@ async function ajouterLecon(event) {
     }
 }
 
+/**
+ * Demande la suppression d'une leçon (qui supprimera aussi le fichier physique de Cloudinary via l'API PHP).
+ * @param {number} lecon_id - L'ID de la leçon à supprimer
+ * @param {number} cours_id - L'ID du cours parent pour rafraîchir la liste
+ */
 async function supprimerLecon(lecon_id, cours_id) {
     if(!confirm("Voulez-vous vraiment supprimer cette leçon ?")) return;
 
@@ -262,6 +278,11 @@ async function envoyerMessage(event, roleStr) {
     } catch(e) {}
 }
 
+/**
+ * Fonction de suppression intégrale d'un cours.
+ * En raison des contraintes ON DELETE CASCADE de la base de données, cela supprimera
+ * automatiquement toutes les leçons, les quiz, et les messages du chat associés.
+ */
 async function supprimerCours(id) {
     if(!confirm("Voulez-vous vraiment supprimer ce cours ? Toutes les leçons associées seront perdues.")) return;
 

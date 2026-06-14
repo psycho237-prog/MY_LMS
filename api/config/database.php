@@ -1,26 +1,35 @@
 <?php
 // api/config/database.php - Projet LMS ONANA GREGOIRE LEGRAND (24G2060)
 
+// Configuration des entêtes HTTP pour autoriser les requêtes Cross-Origin (CORS)
+// Cela permet au frontend (ex: localhost:3000) de communiquer avec l'API PHP
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
-// Pour la portabilité (Windows sans install / Vercel), on utilise SQLite
+// --- CONFIGURATION DE LA BASE DE DONNÉES ---
+// Pour garantir la portabilité (fonctionne sur Windows sans serveur SQL externe et sur Vercel),
+// nous utilisons SQLite. La base est un simple fichier local.
 $db_file = __DIR__ . '/lms_db.sqlite';
 
-// Si on est sur Vercel (read-only filesystem), on utilise /tmp
+// Adaptation spéciale pour Vercel : le système de fichiers est en lecture seule sauf dans /tmp
 if (isset($_ENV['VERCEL'])) {
     $db_file = '/tmp/lms_db.sqlite';
 }
 
 try {
+    // Connexion à SQLite via PDO
     $pdo = new PDO("sqlite:" . $db_file);
+    // Configuration pour générer des exceptions en cas d'erreur SQL
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Retourne les résultats sous forme de tableaux associatifs par défaut
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     
-    // Création automatique des tables si elles n'existent pas
+    // Auto-Setup : Création automatique des tables si le fichier vient d'être créé
+    // Utilisation de ON DELETE CASCADE pour la cohérence des données (ex: si on supprime un cours, ses leçons sont supprimées)
+
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -97,7 +106,9 @@ try {
         );
     ");
 
-    // Ajout d'utilisateurs par défaut si la table est vide (Pratique pour tester sans rien installer)
+    // --- SEEDING DES DONNÉES ---
+    // Ajout d'utilisateurs par défaut si la table users est vide 
+    // Cela permet aux testeurs ou professeurs d'utiliser l'application immédiatement sans configuration.
     $stmt = $pdo->query("SELECT COUNT(*) as count FROM users");
     $row = $stmt->fetch();
     if($row['count'] == 0) {
