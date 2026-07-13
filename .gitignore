@@ -7,8 +7,19 @@ seed.php
 # Base de données SQLite locale
 api/config/lms_db.sqlite
 
-# Uploads locaux
+# Uploads locaux (videos, PDFs, fichiers utilisateurs)
+uploads/
 assets/uploads/
+
+# Fichiers lourds a la racine
+*.mp4
+*.avi
+*.mov
+*.pdf
+
+# Scripts de maintenance locale
+check_db.php
+reset_db.php
 
 # Dossier Node.js (si applicable)
 node_modules/
