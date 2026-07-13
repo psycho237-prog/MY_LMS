@@ -104,6 +104,39 @@ try {
             FOREIGN KEY (cours_id) REFERENCES cours(id) ON DELETE CASCADE,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            message TEXT NOT NULL,
+            lien TEXT,
+            lue INTEGER DEFAULT 0,
+            date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS commentaires (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            lecon_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            nom_user TEXT NOT NULL,
+            role_user TEXT NOT NULL,
+            message TEXT NOT NULL,
+            parent_id INTEGER DEFAULT NULL,
+            date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (lecon_id) REFERENCES lecons(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS logs_activite (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            nom_user TEXT,
+            role_user TEXT,
+            action TEXT NOT NULL,
+            details TEXT,
+            date_action DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
     ");
 
     // --- SEEDING DES DONNÉES ---
@@ -123,9 +156,21 @@ try {
     try {
         $pdo->exec("ALTER TABLE lecons ADD COLUMN cloudinary_public_id TEXT");
         $pdo->exec("ALTER TABLE lecons ADD COLUMN cloudinary_resource_type TEXT");
-    } catch(PDOException $e) {
-        // Les colonnes existent probablement déjà
-    }
+    } catch(PDOException $e) { /* colonnes existantes */ }
+
+    try {
+        $pdo->exec("ALTER TABLE progression_etudiant ADD COLUMN video_position REAL DEFAULT 0");
+    } catch(PDOException $e) { /* colonne existante */ }
+
+    try {
+        $pdo->exec("ALTER TABLE evaluations ADD COLUMN duree_minutes INTEGER DEFAULT 0");
+        $pdo->exec("ALTER TABLE evaluations ADD COLUMN score_minimum INTEGER DEFAULT 50");
+    } catch(PDOException $e) { /* colonnes existantes */ }
+
+    try {
+        $pdo->exec("ALTER TABLE users ADD COLUMN photo_profil TEXT");
+        $pdo->exec("ALTER TABLE users ADD COLUMN bio TEXT");
+    } catch(PDOException $e) { /* colonnes existantes */ }
 
 } catch(PDOException $e) {
     die(json_encode([

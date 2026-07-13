@@ -14,11 +14,98 @@ window.onload = function() {
     
     document.getElementById("nom_utilisateur").textContent = nom;
     afficherCours();
+    demarrerPollingNotifications();
+    logActivite("PAGE_VIEW", "Dashboard étudiant");
 };
 
 let mapProgression = {};
 let currentVideoId = null;
 let currentEval = null;
+let timerInterval = null;
+
+// ===== LOGS D'ACTIVITÉ =====
+async function logActivite(action, details = '') {
+    let id = localStorage.getItem("id_connecte");
+    let nom = localStorage.getItem("nom_connecte");
+    fetch('api/logs.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ user_id: id, nom_user: nom, role_user: 'etudiant', action, details })
+    }).catch(() => {});
+}
+
+// ===== NOTIFICATIONS =====
+let notifOpen = false;
+async function demarrerPollingNotifications() {
+    await chargerNotifications();
+    setInterval(chargerNotifications, 15000);
+}
+
+async function chargerNotifications() {
+    let id = localStorage.getItem("id_connecte");
+    try {
+        let res = await fetch('api/notifications.php?user_id=' + id);
+        let notifs = await res.json();
+        let nonLues = notifs.filter(n => !n.lue);
+        let badge = document.getElementById("badge_notif");
+        if (badge) {
+            badge.textContent = nonLues.length;
+            badge.style.display = nonLues.length > 0 ? 'block' : 'none';
+        }
+        let liste = document.getElementById("liste_notif");
+        if (liste) {
+            if (notifs.length === 0) { liste.innerHTML = '<p style="color:#888;font-size:0.85rem;">Aucune notification</p>'; return; }
+            liste.innerHTML = notifs.map(n => `
+                <div style="padding:8px; border-bottom:1px solid #eee; background:${n.lue ? '#fff' : '#e8f0fe'}; border-radius:4px; margin-bottom:4px; font-size:0.85rem;">
+                    ${n.message}<br><small style="color:#888;">${new Date(n.date_creation).toLocaleString('fr-FR')}</small>
+                </div>
+            `).join('');
+        }
+    } catch(e) {}
+}
+
+function toggleNotifications() {
+    let d = document.getElementById("dropdown_notif");
+    notifOpen = !notifOpen;
+    d.style.display = notifOpen ? 'block' : 'none';
+    if (notifOpen) chargerNotifications();
+}
+
+async function marquerToutLu() {
+    let id = localStorage.getItem("id_connecte");
+    await fetch('api/notifications.php?user_id=' + id, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({all: true}) });
+    chargerNotifications();
+}
+
+// ===== RECHERCHE GLOBALE =====
+let rechercheTimeout = null;
+function rechercheGlobale(q) {
+    clearTimeout(rechercheTimeout);
+    let dd = document.getElementById("dropdown_recherche");
+    if (q.length < 2) { dd.style.display = 'none'; return; }
+    rechercheTimeout = setTimeout(async () => {
+        try {
+            let res = await fetch('api/recherche.php?q=' + encodeURIComponent(q));
+            let results = await res.json();
+            if (results.length === 0) { dd.innerHTML = '<p style="padding:10px;color:#888;">Aucun résultat</p>'; dd.style.display = 'block'; return; }
+            dd.innerHTML = results.map(r => {
+                let icon = r.type === 'cours' ? '📚' : r.type === 'module' ? '📁' : '📋';
+                return `<div onclick="dd.style.display='none'" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background=''"><strong>${icon} ${r.titre}</strong><br><small style="color:#888;">${r.type} — ${r.description || ''}</small></div>`;
+            }).join('');
+            dd.style.display = 'block';
+        } catch(e) {}
+    }, 300);
+}
+document.addEventListener('click', e => {
+    if (!e.target.closest('#input_recherche') && !e.target.closest('#dropdown_recherche')) {
+        let dd = document.getElementById("dropdown_recherche");
+        if(dd) dd.style.display = 'none';
+    }
+    if (!e.target.closest('#dropdown_notif') && !e.target.closest('button[onclick="toggleNotifications()"]')) {
+        let d = document.getElementById("dropdown_notif");
+        if(d && notifOpen) { d.style.display = 'none'; notifOpen = false; }
+    }
+});
 
 async function chargerProgressionGlobale() {
     let id_etudiant = localStorage.getItem("id_connecte");
@@ -129,12 +216,14 @@ async function ouvrirCours(id, titre) {
                 if (score !== null) {
                     html += `<span style="color: green; font-weight: bold; margin-top: 5px; display:inline-block;">Quiz terminé ! Score : ${score}%</span>`;
                 } else if (locked) {
-                    html += `<button disabled style="margin-top:5px; background:#ccc; color:#666; border:none; padding:5px 10px; border-radius:3px; cursor:not-allowed;" title="Visionnez au moins 80% de la vidéo pour débloquer le quiz.">Passer le Quiz (Bloqué)</button>`;
+                    html += `<button disabled style="margin-top:5px; background:#ccc; color:#666; border:none; padding:5px 10px; border-radius:3px; cursor:not-allowed;">Passer le Quiz (Bloqué)</button>`;
                     html += `<small style="color:red; margin-left: 10px;">Vidéo à 80% requise</small>`;
                 } else {
                     html += `<button onclick='ouvrirQuizEtudiant(${lecon.id})' style="margin-top:5px; background:#28a745; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">Passer le Quiz</button>`;
                 }
             }
+            // Bouton Q&A Commentaires
+            html += `<button onclick='ouvrirCommentaires(${lecon.id})' style="margin-top:5px; margin-left:8px; background:#6c757d; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">💬 Q&amp;A</button>`;
             html += "</li>";
         }
         html += "</ul>";
@@ -165,9 +254,20 @@ function ouvrirVideo(url, titre, lecon_id) {
     lecteur.src = url;
     lecteur.load();
     
-    document.getElementById("video_progression_text").textContent = "Visionné : " + (mapProgression[lecon_id] ? Math.round(mapProgression[lecon_id].progression_pourcentage) : 0) + "%";
+    // Reprendre là où on s'est arrêté
+    let savedPos = mapProgression[lecon_id] ? parseFloat(mapProgression[lecon_id].video_position || 0) : 0;
+    if (savedPos > 0) {
+        lecteur.addEventListener('loadedmetadata', function onLoaded() {
+            lecteur.currentTime = savedPos;
+            lecteur.removeEventListener('loadedmetadata', onLoaded);
+        });
+    }
+    
+    let pct = mapProgression[lecon_id] ? Math.round(mapProgression[lecon_id].progression_pourcentage) : 0;
+    document.getElementById("video_progression_text").textContent = "Visionné : " + pct + "%";
     
     document.getElementById("video_modal").style.display = "block";
+    logActivite('VIDEO_OPEN', titre);
 }
 
 let lastProgressUpdate = 0;
@@ -212,6 +312,10 @@ async function ouvrirQuizEtudiant(lecon_id) {
     document.getElementById("btn_valider_quiz").style.display = "none";
     document.getElementById("quiz_resultat_msg").textContent = "";
     document.getElementById("passer_quiz_modal").style.display = "block";
+    let timerDiv = document.getElementById("timer_quiz");
+    let timerVal = document.getElementById("timer_val");
+    timerDiv.style.display = "none";
+    if (timerInterval) clearInterval(timerInterval);
     
     try {
         let res = await fetch('api/evaluations.php?lecon_id=' + lecon_id);
@@ -233,6 +337,25 @@ async function ouvrirQuizEtudiant(lecon_id) {
             });
             container.innerHTML = html;
             document.getElementById("btn_valider_quiz").style.display = "block";
+            
+            // Gestion du chronomètre
+            if (currentEval.duree_minutes && currentEval.duree_minutes > 0) {
+                timerDiv.style.display = "block";
+                let tempsRestant = currentEval.duree_minutes * 60;
+                let updateTimer = () => {
+                    let m = Math.floor(tempsRestant / 60).toString().padStart(2, '0');
+                    let s = (tempsRestant % 60).toString().padStart(2, '0');
+                    timerVal.textContent = `${m}:${s}`;
+                    if (tempsRestant <= 0) {
+                        clearInterval(timerInterval);
+                        soumettreQuiz();
+                    }
+                    tempsRestant--;
+                };
+                updateTimer();
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+            logActivite('QUIZ_START', 'Quiz: ' + currentEval.titre);
         } else {
             container.innerHTML = "Aucun quiz trouvé.";
         }
@@ -243,6 +366,7 @@ async function ouvrirQuizEtudiant(lecon_id) {
 
 async function soumettreQuiz() {
     if (!currentEval) return;
+    if (timerInterval) clearInterval(timerInterval);
     
     let questions = typeof currentEval.questions === 'string' ? JSON.parse(currentEval.questions) : currentEval.questions;
     let score = 0;
@@ -255,10 +379,11 @@ async function soumettreQuiz() {
     }
     
     let pourcentageScore = Math.round((score / questions.length) * 100);
+    let seuil = currentEval.score_minimum || 50;
     
     let msg = document.getElementById("quiz_resultat_msg");
-    msg.style.color = pourcentageScore >= 50 ? "green" : "red";
-    msg.textContent = `Votre score : ${pourcentageScore}% (${score}/${questions.length})`;
+    msg.style.color = pourcentageScore >= seuil ? "green" : "red";
+    msg.textContent = `Votre score : ${pourcentageScore}% (${score}/${questions.length}) — ${pourcentageScore >= seuil ? 'Validé' : 'Échoué, le minimum requis est '+seuil+'%'}`;
     document.getElementById("btn_valider_quiz").style.display = "none";
     
     // Sauvegarder
@@ -271,7 +396,18 @@ async function soumettreQuiz() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ etudiant_id: id_etudiant, lecon_id: lecon_id, score: pourcentageScore })
         });
+        
+        // Notifier la réussite
+        if (pourcentageScore >= seuil) {
+            fetch('api/notifications.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ user_id: id_etudiant, message: '🎉 Bravo ! Vous avez validé le quiz avec ' + pourcentageScore + '%', lien: null })
+            });
+        }
+        
         chargerProgressionGlobale(); // refresh global
+        logActivite('QUIZ_SUBMIT', 'Quiz: ' + currentEval.titre + ' Score: ' + pourcentageScore + '%');
     } catch(e) {
         console.error("Erreur save quiz");
     }
@@ -333,6 +469,66 @@ async function envoyerMessage(event, roleStr) {
 function fermerModal(modalId) {
     document.getElementById(modalId).style.display = "none";
     if(window.chatInterval) clearInterval(window.chatInterval);
+    if(modalId === 'passer_quiz_modal' && timerInterval) clearInterval(timerInterval);
+}
+
+// ===== COMMENTAIRES =====
+async function ouvrirCommentaires(lecon_id) {
+    document.getElementById("comm_lecon_id").value = lecon_id;
+    document.getElementById("commentaires_modal").style.display = "block";
+    chargerCommentaires();
+}
+
+async function chargerCommentaires() {
+    let lecon_id = document.getElementById("comm_lecon_id").value;
+    let container = document.getElementById("liste_commentaires");
+    try {
+        let res = await fetch('api/commentaires.php?lecon_id=' + lecon_id);
+        let comments = await res.json();
+        
+        if (comments.length === 0) { container.innerHTML = "<p style='color:#888;'>Soyez le premier à poser une question !</p>"; return; }
+        
+        container.innerHTML = comments.map(c => `
+            <div style="margin-bottom:15px; padding:10px; background:#f8f9fa; border-radius:8px; border:1px solid #e9ecef;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
+                    ${c.photo_profil ? `<img src="${c.photo_profil}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;">` : `<div style="width:30px;height:30px;border-radius:50%;background:#ccc;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;">${c.nom_user[0]}</div>`}
+                    <strong style="color:#0056b3;">${c.nom_user}</strong> <span style="font-size:0.75rem; color:#888;">— ${new Date(c.date_creation).toLocaleString('fr-FR')}</span>
+                </div>
+                <div style="margin-left:40px;">${c.message}</div>
+                ${c.reponses.length > 0 ? c.reponses.map(r => `
+                    <div style="margin-top:10px; margin-left:40px; padding:10px; background:#e8f4fd; border-radius:8px; border:1px solid #b8daff;">
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
+                            ${r.photo_profil ? `<img src="${r.photo_profil}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` : `<div style="width:24px;height:24px;border-radius:50%;background:#0056b3;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:0.8rem;">${r.nom_user[0]}</div>`}
+                            <strong style="color:#004085;">${r.nom_user}</strong> <span style="font-size:0.75rem; background:#28a745; color:white; padding:2px 5px; border-radius:4px;">Enseignant</span>
+                        </div>
+                        <div style="margin-left:34px;">${r.message}</div>
+                    </div>
+                `).join('') : ''}
+            </div>
+        `).join('');
+    } catch(e) {}
+}
+
+async function posterCommentaire() {
+    let input = document.getElementById("input_commentaire");
+    let msg = input.value.trim();
+    if (!msg) return;
+    
+    let user_id = localStorage.getItem("id_connecte");
+    let nom_user = localStorage.getItem("nom_connecte");
+    let role_user = localStorage.getItem("role_connecte");
+    let lecon_id = document.getElementById("comm_lecon_id").value;
+    
+    try {
+        await fetch('api/commentaires.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ lecon_id, user_id, nom_user, role_user, message: msg })
+        });
+        input.value = "";
+        chargerCommentaires();
+        logActivite('COMMENT_ADD', 'Question posée');
+    } catch(e) {}
 }
 
 async function afficherProgression() {

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Profil — FONDA WORKPLACE</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+        .profil-container { max-width: 700px; margin: 40px auto; background: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .profil-header { display: flex; align-items: center; gap: 24px; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #e9ecef; }
+        .profil-avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid #0056b3; background: #e9ecef; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #0056b3; overflow: hidden; }
+        .profil-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .profil-info h2 { margin: 0 0 4px; font-size: 1.5rem; }
+        .profil-info span { color: #666; font-size: 0.9rem; background: #e9ecef; padding: 2px 10px; border-radius: 20px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 6px; color: #333; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px 14px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 1rem; box-sizing: border-box; transition: border-color .2s; }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #0056b3; }
+        .btn-save { background: #0056b3; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: 600; transition: background .2s; }
+        .btn-save:hover { background: #003d82; }
+        .msg { margin-top: 14px; font-weight: bold; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px; }
+        .stat-card { background: #f8f9fa; border-radius: 8px; padding: 16px; text-align: center; border: 1px solid #e9ecef; }
+        .stat-card .val { font-size: 1.8rem; font-weight: 700; color: #0056b3; }
+        .stat-card .lbl { font-size: 0.8rem; color: #666; margin-top: 4px; }
+        .retour { display: inline-block; margin-bottom: 20px; color: #0056b3; text-decoration: none; font-weight: 600; }
+        .retour:hover { text-decoration: underline; }
+        h1 { color: #0056b3; }
+        section { margin-top: 28px; padding-top: 20px; border-top: 1px solid #e9ecef; }
+    </style>
+</head>
+<body>
+<div class="profil-container">
+    <a class="retour" href="javascript:history.back()">← Retour</a>
+    <h1>Mon Profil</h1>
+
+    <div class="profil-header">
+        <div class="profil-avatar" id="avatar_display">
+            <img id="avatar_img" src="" alt="" style="display:none;">
+            <span id="avatar_initiale">?</span>
+        </div>
+        <div class="profil-info">
+            <h2 id="display_nom">Chargement...</h2>
+            <span id="display_role">-</span>
+        </div>
+    </div>
+
+    <section>
+        <h3>Modifier mes informations</h3>
+        <div class="form-group">
+            <label>Nom complet</label>
+            <input type="text" id="input_nom" placeholder="Votre nom">
+        </div>
+        <div class="form-group">
+            <label>Adresse Email</label>
+            <input type="email" id="input_email" placeholder="votre@email.com">
+        </div>
+        <div class="form-group">
+            <label>Bio / Description</label>
+            <textarea id="input_bio" rows="3" placeholder="Quelques mots sur vous..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Nouveau mot de passe (laisser vide pour ne pas changer)</label>
+            <input type="password" id="input_mdp" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+            <label>Photo de profil (URL ou Upload)</label>
+            <input type="text" id="input_photo_url" placeholder="https://... ou cliquez ci-dessous">
+            <input type="file" id="input_photo_file" accept="image/*" style="margin-top: 8px;">
+        </div>
+        <button class="btn-save" onclick="sauvegarderProfil()">💾 Sauvegarder</button>
+        <p class="msg" id="msg_profil"></p>
+    </section>
+
+    <section>
+        <h3>Mes Statistiques</h3>
+        <div class="stats-grid" id="stats_grid">
+            <div class="stat-card"><div class="val" id="stat_lecons">-</div><div class="lbl">Leçons vues</div></div>
+            <div class="stat-card"><div class="val" id="stat_quiz">-</div><div class="lbl">Quiz passés</div></div>
+            <div class="stat-card"><div class="val" id="stat_score">-</div><div class="lbl">Score moyen</div></div>
+        </div>
+    </section>
+</div>
+
+<script src="assets/js/auth.js"></script>
+<script>
+let userId = localStorage.getItem("id_connecte");
+let userRole = localStorage.getItem("role_connecte");
+
+window.onload = async function() {
+    if (!userId) { window.location.href = "login.html"; return; }
+
+    try {
+        let res = await fetch('api/profil.php?user_id=' + userId);
+        let user = await res.json();
+
+        document.getElementById("input_nom").value = user.nom || "";
+        document.getElementById("input_email").value = user.email || "";
+        document.getElementById("input_bio").value = user.bio || "";
+        document.getElementById("display_nom").textContent = user.nom;
+        document.getElementById("display_role").textContent = user.role;
+
+        let initiale = (user.nom || "?")[0].toUpperCase();
+        document.getElementById("avatar_initiale").textContent = initiale;
+
+        if (user.photo_profil) {
+            document.getElementById("avatar_img").src = user.photo_profil;
+            document.getElementById("avatar_img").style.display = "block";
+            document.getElementById("avatar_initiale").style.display = "none";
+            document.getElementById("input_photo_url").value = user.photo_profil;
+        }
+
+        // Charger les stats (si étudiant)
+        if (user.role === 'etudiant') {
+            let resP = await fetch('api/progression.php?etudiant_id=' + userId);
+            let prog = await resP.json();
+            let quizFaits = prog.filter(p => p.score !== null);
+            let scoreMoyen = quizFaits.length > 0
+                ? Math.round(quizFaits.reduce((acc, p) => acc + parseFloat(p.score), 0) / quizFaits.length)
+                : 0;
+            document.getElementById("stat_lecons").textContent = prog.length;
+            document.getElementById("stat_quiz").textContent = quizFaits.length;
+            document.getElementById("stat_score").textContent = scoreMoyen + "%";
+        } else {
+            document.getElementById("stats_grid").style.display = "none";
+        }
+    } catch(e) { console.error(e); }
+};
+
+async function sauvegarderProfil() {
+    let msg = document.getElementById("msg_profil");
+    msg.style.color = "#333";
+    msg.textContent = "Sauvegarde...";
+
+    let photoUrl = document.getElementById("input_photo_url").value;
+
+    // Upload photo si fichier sélectionné
+    let fileInput = document.getElementById("input_photo_file");
+    if (fileInput.files.length > 0) {
+        let fd = new FormData();
+        fd.append("file", fileInput.files[0]);
+        try {
+            let upRes = await fetch('api/upload.php', { method: 'POST', body: fd });
+            let upData = await upRes.json();
+            if (upData.success) photoUrl = upData.url;
+        } catch(e) {}
+    }
+
+    let payload = {
+        user_id: userId,
+        nom: document.getElementById("input_nom").value,
+        email: document.getElementById("input_email").value,
+        bio: document.getElementById("input_bio").value,
+        photo_profil: photoUrl
+    };
+    let mdp = document.getElementById("input_mdp").value;
+    if (mdp) payload.mot_de_passe = mdp;
+
+    try {
+        let res = await fetch('api/profil.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        let data = await res.json();
+        msg.style.color = data.success ? "green" : "red";
+        msg.textContent = data.success ? "✓ Profil mis à jour !" : "Erreur : " + data.message;
+
+        if (data.success) {
+            localStorage.setItem("nom_connecte", document.getElementById("input_nom").value);
+            document.getElementById("display_nom").textContent = document.getElementById("input_nom").value;
+            if (photoUrl) {
+                document.getElementById("avatar_img").src = photoUrl;
+                document.getElementById("avatar_img").style.display = "block";
+                document.getElementById("avatar_initiale").style.display = "none";
+            }
+        }
+    } catch(e) {
+        msg.style.color = "red";
+        msg.textContent = "Erreur serveur.";
+    }
+}
+</script>
+</body>
+</html>

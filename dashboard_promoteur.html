@@ -6,18 +6,54 @@
     <title>FONDA WORKPLACE - Espace Promoteur</title>
     <!-- Projet etudiant de ONANA GREGOIRE LEGRAND (24G2060) -->
     <link rel="stylesheet" href="assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="navbar">
         <h1>FONDA WORKPLACE</h1>
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <span id="nom_utilisateur" style="color: var(--text-muted); font-weight: 600;"></span>
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <div style="position:relative;">
+                <input type="text" id="input_recherche" placeholder="🔍 Rechercher..." oninput="rechercheGlobale(this.value)" style="padding: 6px 12px; border-radius: 20px; border: none; font-size: 0.9rem; width: 200px;">
+                <div id="dropdown_recherche" style="display:none; position:absolute; top:36px; left:0; width:300px; background:white; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.15); z-index:1000; max-height:250px; overflow-y:auto;"></div>
+            </div>
+            <div style="position:relative;">
+                <button onclick="toggleNotifications()" style="background:none;border:none;cursor:pointer;font-size:1.3rem;position:relative;" title="Notifications">
+                    🔔 <span id="badge_notif" style="display:none;position:absolute;top:-5px;right:-5px;background:red;color:white;border-radius:50%;width:18px;height:18px;font-size:0.65rem;line-height:18px;text-align:center;">0</span>
+                </button>
+                <div id="dropdown_notif" style="display:none;position:absolute;top:40px;right:0;width:300px;background:white;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,0.15);z-index:1000;padding:10px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong>Notifications</strong><button onclick="marquerToutLu()" style="font-size:0.75rem;background:none;border:none;color:#0056b3;cursor:pointer;">Tout lire</button></div>
+                    <div id="liste_notif">Chargement...</div>
+                </div>
+            </div>
+            <a href="profil.html" style="color:white;font-size:1.3rem;text-decoration:none;" title="Mon profil">👤</a>
+            <span id="nom_utilisateur" style="color: white; font-weight: bold;"></span>
             <button onclick="deconnexion()" class="btn-quitter">Déconnexion</button>
         </div>
     </div>
 
     <div class="contenu-principal">
-        <h2>Liste des Enseignants</h2>
+        
+        <!-- Statistiques et Graphiques -->
+        <h2 style="margin-top: 20px;">Statistiques Globales</h2>
+        <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:30px;">
+            <div style="flex:1; min-width:300px; background:white; padding:20px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+                <canvas id="chartUsers"></canvas>
+            </div>
+            <div style="flex:1; min-width:300px; background:white; padding:20px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+                <canvas id="chartCours"></canvas>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2>Liste des Enseignants</h2>
+            <!-- Import CSV -->
+            <div style="background:#f8f9fa; padding:10px; border-radius:5px; border:1px solid #ddd;">
+                <label style="font-size:0.9rem; font-weight:bold;">Importer des enseignants (CSV) :</label><br>
+                <input type="file" id="file_csv" accept=".csv" style="font-size:0.85rem; margin-top:5px;">
+                <button onclick="importerCSV()" style="background:#28a745; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">Importer</button>
+                <div id="import_msg" style="font-size:0.85rem; margin-top:5px;"></div>
+            </div>
+        </div>
         <p style="color: var(--text-muted);">Voici les enseignants inscrits sur la plateforme.</p>
         <div class="liste-cours" id="liste_enseignants">
             <div style="text-align:center; grid-column: 1 / -1; color: var(--text-muted);">
@@ -26,12 +62,29 @@
         </div>
 
         <h2 style="margin-top: 40px;">Gestion des Modules</h2>
-        <p style="color: var(--text-muted);">Vue d'ensemble et statistiques.</p>
-
         <div class="liste-cours" id="mes_cours">
             <div style="text-align:center; grid-column: 1 / -1; color: var(--text-muted);">
-                Chargement des cours...
+                Chargement des modules...
             </div>
+        </div>
+
+        <!-- Logs d'Activité -->
+        <h2 style="margin-top: 40px;">Logs d'Activité</h2>
+        <div style="background:white; padding:15px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.05); overflow-x:auto;">
+            <table style="width:100%; border-collapse: collapse; font-size:0.9rem;">
+                <thead style="background:#f4f4f4; text-align:left;">
+                    <tr>
+                        <th style="padding:10px; border-bottom:1px solid #ddd;">Date</th>
+                        <th style="padding:10px; border-bottom:1px solid #ddd;">Utilisateur</th>
+                        <th style="padding:10px; border-bottom:1px solid #ddd;">Rôle</th>
+                        <th style="padding:10px; border-bottom:1px solid #ddd;">Action</th>
+                        <th style="padding:10px; border-bottom:1px solid #ddd;">Détails</th>
+                    </tr>
+                </thead>
+                <tbody id="logs_body">
+                    <tr><td colspan="5" style="text-align:center; padding:10px;">Chargement des logs...</td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
 

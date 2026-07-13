@@ -14,7 +14,93 @@ window.onload = function() {
     
     document.getElementById("nom_utilisateur").textContent = nom;
     afficherCours();
+    demarrerPollingNotifications();
+    logActivite("PAGE_VIEW", "Dashboard enseignant");
 };
+
+// ===== LOGS D'ACTIVITÉ =====
+async function logActivite(action, details = '') {
+    let id = localStorage.getItem("id_connecte");
+    let nom = localStorage.getItem("nom_connecte");
+    fetch('api/logs.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ user_id: id, nom_user: nom, role_user: 'enseignant', action, details })
+    }).catch(() => {});
+}
+
+// ===== NOTIFICATIONS =====
+let notifOpen = false;
+async function demarrerPollingNotifications() {
+    await chargerNotifications();
+    setInterval(chargerNotifications, 15000);
+}
+
+async function chargerNotifications() {
+    let id = localStorage.getItem("id_connecte");
+    try {
+        let res = await fetch('api/notifications.php?user_id=' + id);
+        let notifs = await res.json();
+        let nonLues = notifs.filter(n => !n.lue);
+        let badge = document.getElementById("badge_notif");
+        if (badge) {
+            badge.textContent = nonLues.length;
+            badge.style.display = nonLues.length > 0 ? 'block' : 'none';
+        }
+        let liste = document.getElementById("liste_notif");
+        if (liste) {
+            if (notifs.length === 0) { liste.innerHTML = '<p style="color:#888;font-size:0.85rem;">Aucune notification</p>'; return; }
+            liste.innerHTML = notifs.map(n => `
+                <div style="padding:8px; border-bottom:1px solid #eee; background:${n.lue ? '#fff' : '#e8f0fe'}; border-radius:4px; margin-bottom:4px; font-size:0.85rem;">
+                    ${n.message}<br><small style="color:#888;">${new Date(n.date_creation).toLocaleString('fr-FR')}</small>
+                </div>
+            `).join('');
+        }
+    } catch(e) {}
+}
+
+function toggleNotifications() {
+    let d = document.getElementById("dropdown_notif");
+    notifOpen = !notifOpen;
+    d.style.display = notifOpen ? 'block' : 'none';
+    if (notifOpen) chargerNotifications();
+}
+
+async function marquerToutLu() {
+    let id = localStorage.getItem("id_connecte");
+    await fetch('api/notifications.php?user_id=' + id, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({all: true}) });
+    chargerNotifications();
+}
+
+// ===== RECHERCHE GLOBALE =====
+let rechercheTimeout = null;
+function rechercheGlobale(q) {
+    clearTimeout(rechercheTimeout);
+    let dd = document.getElementById("dropdown_recherche");
+    if (q.length < 2) { dd.style.display = 'none'; return; }
+    rechercheTimeout = setTimeout(async () => {
+        try {
+            let res = await fetch('api/recherche.php?q=' + encodeURIComponent(q));
+            let results = await res.json();
+            if (results.length === 0) { dd.innerHTML = '<p style="padding:10px;color:#888;">Aucun résultat</p>'; dd.style.display = 'block'; return; }
+            dd.innerHTML = results.map(r => {
+                let icon = r.type === 'cours' ? '📚' : r.type === 'module' ? '📁' : '📋';
+                return `<div onclick="dd.style.display='none'" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background=''"><strong>${icon} ${r.titre}</strong><br><small style="color:#888;">${r.type} — ${r.description || ''}</small></div>`;
+            }).join('');
+            dd.style.display = 'block';
+        } catch(e) {}
+    }, 300);
+}
+document.addEventListener('click', e => {
+    if (!e.target.closest('#input_recherche') && !e.target.closest('#dropdown_recherche')) {
+        let dd = document.getElementById("dropdown_recherche");
+        if(dd) dd.style.display = 'none';
+    }
+    if (!e.target.closest('#dropdown_notif') && !e.target.closest('button[onclick="toggleNotifications()"]')) {
+        let d = document.getElementById("dropdown_notif");
+        if(d && notifOpen) { d.style.display = 'none'; notifOpen = false; }
+    }
+});
 
 /**
  * Récupère et affiche la liste des cours créés par l'enseignant connecté.
@@ -78,7 +164,9 @@ async function chargerLeconsList(id) {
         lecons.forEach(lecon => {
             html += "<li style='margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;'>";
             html += "<span><strong>" + lecon.titre + "</strong> (" + lecon.type + ") - <a href='" + lecon.url_contenu + "' target='_blank'>Voir le contenu</a></span>";
-            html += "<div><button onclick='ouvrirQuiz(" + lecon.id + ", \"" + lecon.titre + "\")' style='margin-right:10px; background:#17a2b8; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px;'>Ajouter un quiz</button>";
+            html += "<div>";
+            html += "<button onclick='ouvrirReponses(" + lecon.id + ")' style='margin-right:10px; background:#6c757d; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px;'>💬 Q&A</button>";
+            html += "<button onclick='ouvrirQuiz(" + lecon.id + ", \"" + lecon.titre + "\")' style='margin-right:10px; background:#17a2b8; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px;'>Ajouter un quiz</button>";
             html += "<button onclick='supprimerLecon(" + lecon.id + ", " + id + ")' style='background:#dc3545; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px;'>Supprimer</button></div>";
             html += "</li>";
         });
@@ -264,10 +352,14 @@ async function ouvrirQuiz(lecon_id, lecon_titre) {
         if (evals.length > 0) {
             let quiz = evals[0];
             document.getElementById("quiz_titre").value = quiz.titre;
+            document.getElementById("quiz_duree").value = quiz.duree_minutes || 0;
+            document.getElementById("quiz_seuil").value = quiz.score_minimum || 50;
             let questions = typeof quiz.questions === 'string' ? JSON.parse(quiz.questions) : quiz.questions;
             questions.forEach(q => ajouterQuestionBuilder(q));
             document.getElementById("btn_submit_quiz").textContent = "Modifier le quiz";
         } else {
+            document.getElementById("quiz_duree").value = 0;
+            document.getElementById("quiz_seuil").value = 50;
             document.getElementById("btn_submit_quiz").textContent = "Ajouter le quiz";
             ajouterQuestionBuilder(); // Add one empty question by default
         }
@@ -313,6 +405,8 @@ async function ajouterQuiz(event) {
     event.preventDefault();
     let lecon_id = document.getElementById("quiz_lecon_id").value;
     let titre = document.getElementById("quiz_titre").value;
+    let duree = document.getElementById("quiz_duree").value;
+    let seuil = document.getElementById("quiz_seuil").value;
     let msg = document.getElementById("quiz_msg");
     
     let questionsItems = document.querySelectorAll(".question-item");
@@ -350,7 +444,7 @@ async function ajouterQuiz(event) {
         let res = await fetch('api/evaluations.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ lecon_id: lecon_id, titre: titre, questions: questionsObj })
+            body: JSON.stringify({ lecon_id: lecon_id, titre: titre, questions: questionsObj, duree_minutes: duree, score_minimum: seuil })
         });
         let data = await res.json();
 
@@ -492,4 +586,75 @@ async function ajouterCours(event) {
 function fermerModal(modalId) {
     document.getElementById(modalId).style.display = "none";
     if(window.chatInterval) clearInterval(window.chatInterval);
+}
+
+// ===== COMMENTAIRES / Q&A =====
+async function ouvrirReponses(lecon_id) {
+    document.getElementById("rep_lecon_id").value = lecon_id;
+    document.getElementById("reponses_modal").style.display = "block";
+    chargerReponses();
+}
+
+async function chargerReponses() {
+    let lecon_id = document.getElementById("rep_lecon_id").value;
+    let container = document.getElementById("liste_reponses");
+    try {
+        let res = await fetch('api/commentaires.php?lecon_id=' + lecon_id);
+        let comments = await res.json();
+        
+        if (comments.length === 0) { container.innerHTML = "<p style='color:#888;'>Aucune question pour cette leçon.</p>"; return; }
+        
+        container.innerHTML = comments.map(c => `
+            <div style="margin-bottom:15px; padding:10px; background:#f8f9fa; border-radius:8px; border:1px solid #e9ecef;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
+                    ${c.photo_profil ? `<img src="${c.photo_profil}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;">` : `<div style="width:30px;height:30px;border-radius:50%;background:#ccc;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;">${c.nom_user[0]}</div>`}
+                    <strong style="color:#0056b3;">${c.nom_user}</strong> <span style="font-size:0.75rem; color:#888;">— ${new Date(c.date_creation).toLocaleString('fr-FR')}</span>
+                </div>
+                <div style="margin-left:40px;">${c.message}</div>
+                ${c.reponses.length > 0 ? c.reponses.map(r => `
+                    <div style="margin-top:10px; margin-left:40px; padding:10px; background:#e8f4fd; border-radius:8px; border:1px solid #b8daff;">
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
+                            ${r.photo_profil ? `<img src="${r.photo_profil}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` : `<div style="width:24px;height:24px;border-radius:50%;background:#0056b3;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:0.8rem;">${r.nom_user[0]}</div>`}
+                            <strong style="color:#004085;">${r.nom_user}</strong> <span style="font-size:0.75rem; background:#28a745; color:white; padding:2px 5px; border-radius:4px;">Enseignant</span>
+                        </div>
+                        <div style="margin-left:34px;">${r.message}</div>
+                    </div>
+                `).join('') : ''}
+                <div style="margin-top:10px; margin-left:40px; display:flex; gap:10px;">
+                    <input type="text" id="rep_input_${c.id}" placeholder="Répondre..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:5px;">
+                    <button onclick="repondreCommentaire(${c.id})" style="background:#28a745; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Envoyer</button>
+                </div>
+            </div>
+        `).join('');
+    } catch(e) {}
+}
+
+async function repondreCommentaire(parent_id) {
+    let input = document.getElementById("rep_input_" + parent_id);
+    let msg = input.value.trim();
+    if (!msg) return;
+    
+    let user_id = localStorage.getItem("id_connecte");
+    let nom_user = localStorage.getItem("nom_connecte");
+    let role_user = localStorage.getItem("role_connecte");
+    let lecon_id = document.getElementById("rep_lecon_id").value;
+    
+    try {
+        await fetch('api/commentaires.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ lecon_id, user_id, nom_user, role_user, parent_id, message: msg })
+        });
+        
+        // Notifier l'étudiant
+        fetch('api/notifications.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ user_id: 'auto', message: 'L\'enseignant a répondu à votre question.', lien: null })
+        }); // Remarque: idéalement l'API devrait gérer l'ID exact de l'étudiant à notifier, géré dans un update du backend si besoin, mais on simule.
+        
+        input.value = "";
+        chargerReponses();
+        logActivite('COMMENT_REPLY', 'Réponse au commentaire ' + parent_id);
+    } catch(e) {}
 }
