@@ -3,188 +3,246 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FONDA WORKPLACE - Espace Enseignant</title>
-    <!-- Teacher account (enseignant@lms.com / 1234) allows teachers to create courses, add/edit lessons (PDF, video), and use the class chat -->
-<!-- Projet etudiant de ONANA GREGOIRE LEGRAND (24G2060) -->
+    <title>FONDA WORKPLACE — Espace Enseignant</title>
+    <!-- Projet de ONANA GREGOIRE LEGRAND (24G2060) -->
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-    <div class="navbar">
-        <h1>FONDA WORKPLACE</h1>
-        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+
+<div class="app-layout">
+
+    <!-- ======= SIDEBAR ======= -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <span class="logo-name">Fonda Workplace</span>
+            <span class="logo-sub">Espace Enseignant</span>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section-label">Principal</div>
+            <a onclick="showSection('accueil')" id="nav-accueil" class="active">
+                <span class="nav-dot"></span><span>Tableau de bord</span>
+            </a>
+            <a onclick="showSection('cours')" id="nav-cours">
+                <span class="nav-dot"></span><span>Mes Cours</span>
+            </a>
+            <a onclick="showSection('qa')" id="nav-qa">
+                <span class="nav-dot"></span><span>Q&amp;A Étudiants</span>
+            </a>
+            <div class="sidebar-section-label">Compte</div>
+            <a href="profil.html">
+                <span class="nav-dot"></span><span>Mon Profil</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div id="sidebar_user" style="font-weight:600; color:rgba(255,255,255,0.7);"></div>
+            <div style="margin-top:3px; font-size:0.68rem;">Enseignant</div>
+        </div>
+    </aside>
+
+    <!-- ======= HEADER ======= -->
+    <header class="app-header">
+        <div class="app-header-title" id="page_title">Tableau de bord</div>
+        <div class="app-header-right">
             <div style="position:relative;">
-                <input type="text" id="input_recherche" placeholder="Rechercher..." oninput="rechercheGlobale(this.value)" style="padding: 6px 12px; border-radius: 20px; border: none; font-size: 0.9rem; width: 200px;">
-                <div id="dropdown_recherche" style="display:none; position:absolute; top:36px; left:0; width:300px; background:white; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.15); z-index:1000; max-height:250px; overflow-y:auto;"></div>
+                <input type="text" id="input_recherche" class="header-search" placeholder="Rechercher..." oninput="rechercheGlobale(this.value)">
+                <div id="dropdown_recherche" style="display:none; position:absolute; top:38px; right:0; width:300px; background:white; border-radius:var(--radius-md); box-shadow:var(--shadow-lg); z-index:1000; max-height:260px; overflow-y:auto; border:1px solid var(--color-neutral-200);"></div>
             </div>
             <div style="position:relative;">
-                <button onclick="toggleNotifications()" style="background:none;border:none;cursor:pointer;font-size:1.3rem;position:relative;" title="Notifications">
-                    Notifs <span id="badge_notif" style="display:none;position:absolute;top:-5px;right:-5px;background:red;color:white;border-radius:50%;width:18px;height:18px;font-size:0.65rem;line-height:18px;text-align:center;">0</span>
+                <button class="notif-btn" onclick="toggleNotifications()">
+                    Notifs&nbsp;<span id="badge_notif" style="display:none; position:absolute; top:-5px; right:-5px; background:var(--color-danger); color:white; border-radius:50%; width:16px; height:16px; font-size:0.58rem; line-height:16px; text-align:center; font-weight:700;">0</span>
                 </button>
-                <div id="dropdown_notif" style="display:none;position:absolute;top:40px;right:0;width:300px;background:white;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,0.15);z-index:1000;padding:10px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong>Notifications</strong><button onclick="marquerToutLu()" style="font-size:0.75rem;background:none;border:none;color:#0056b3;cursor:pointer;">Tout lire</button></div>
-                    <div id="liste_notif">Chargement...</div>
+                <div id="dropdown_notif" style="display:none; position:absolute; top:42px; right:0; width:300px; background:white; border-radius:var(--radius-md); box-shadow:var(--shadow-lg); z-index:1000; padding:12px; border:1px solid var(--color-neutral-200);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <strong style="font-size:0.85rem;">Notifications</strong>
+                        <button onclick="marquerToutLu()" style="font-size:0.75rem; background:none; border:none; color:var(--color-primary); cursor:pointer; font-family:var(--font-base);">Tout lire</button>
+                    </div>
+                    <div id="liste_notif" style="max-height:200px; overflow-y:auto;">Chargement...</div>
                 </div>
             </div>
-            <a href="profil.html" style="color:white;font-size:1rem;text-decoration:none;" title="Mon profil">Profil</a>
-            <span id="nom_utilisateur" style="font-weight: bold;"></span>
+            <span class="app-header-user" id="nom_utilisateur"></span>
             <button onclick="deconnexion()" class="btn-quitter">Déconnexion</button>
         </div>
-    </div>
+    </header>
 
-    <div class="contenu-principal">
-        <h2>Gestion des Cours</h2>
-        <p>Voici vos cours et leçons à gérer.</p>
-        <!-- Button to open the course creation modal -->
-        <button class="btn-ajouter-cours" onclick="ouvrirAjoutCours()" style="margin-bottom:10px; background:#28a745; color:white; border:none; padding:8px 12px; cursor:pointer; border-radius: 5px;">Ajouter un cours</button>
-        
-        <div class="liste-cours" id="mes_cours">
-            <div style="text-align:center; width: 100%;">
-                Chargement des cours...
-            </div>
-        </div>
-    </div>
+    <!-- ======= MAIN CONTENT ======= -->
+    <main class="app-main">
 
-    <!-- Modal pour les lecons -->
-    <div id="lecon_modal" class="modal">
-        <div class="modal-content" style="width: 80%; max-width: 800px;">
-            <span class="close-btn" onclick="fermerModal('lecon_modal')">&times;</span>
-            <h2 id="modal_titre">Gérer les leçons</h2>
-            
-            <div style="border-bottom: 1px solid #ccc; margin-bottom: 20px; padding-bottom: 20px;">
-                <h3>Ajouter une nouvelle leçon</h3>
-                <form id="form_ajout_lecon" onsubmit="ajouterLecon(event)">
-                    <input type="hidden" id="cours_id_actif">
-                    <div class="champ">
-                        <label>Titre de la leçon :</label>
-                        <input type="text" id="lecon_titre" required>
-                    </div>
-                    <div class="champ">
-                        <label>Type :</label>
-                        <select id="lecon_type" required>
-                            <option value="pdf">Document (PDF/DOCX)</option>
-                            <option value="video">Vidéo (MP4)</option>
-                        </select>
-                    </div>
-                    <div class="champ">
-                        <label>Source :</label>
-                        <select id="lecon_source" onchange="changerSourceLecon()">
-                            <option value="fichier">Upload Fichier</option>
-                            <option value="url">Lien URL (ex: YouTube)</option>
-                        </select>
-                    </div>
-                    <div class="champ" id="champ_fichier">
-                        <label>Fichier :</label>
-                        <input type="file" id="lecon_fichier" accept=".pdf,.doc,.docx,.mp4">
-                    </div>
-                    <div class="champ" id="champ_url" style="display:none;">
-                        <label>Lien URL :</label>
-                        <input type="url" id="lecon_url" placeholder="https://...">
-                    </div>
-                    <button type="submit">Ajouter</button>
-                    <p id="lecon_msg"></p>
-                </form>
+        <!-- Section : Tableau de bord -->
+        <section id="section-accueil" class="page-section active">
+            <p class="page-title">Tableau de bord</p>
+            <p class="page-subtitle">Vue d'ensemble de votre activité d'enseignement.</p>
+
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-card-label">Cours créés</div>
+                    <div class="stat-card-value" id="stat_cours_ens">—</div>
+                    <div class="stat-card-sub">modules assignés</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Leçons publiées</div>
+                    <div class="stat-card-value" id="stat_lecons_ens">—</div>
+                    <div class="stat-card-sub">PDF et vidéos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Quiz créés</div>
+                    <div class="stat-card-value" id="stat_quiz_ens">—</div>
+                    <div class="stat-card-sub">évaluations actives</div>
+                </div>
             </div>
 
-            <h3>Leçons existantes</h3>
-            <div id="modal_contenu">
-                <!-- Les leçons s'afficheront ici -->
+            <button class="btn-cours" style="width:auto; margin-top:0;" onclick="showSection('cours')">Gérer mes cours</button>
+        </section>
+
+        <!-- Section : Mes Cours -->
+        <section id="section-cours" class="page-section">
+            <div class="section-header">
+                <div>
+                    <p class="page-title" style="margin-bottom:4px;">Mes Cours</p>
+                    <p class="page-subtitle" style="margin-bottom:0;">Gérez vos cours, leçons et quiz.</p>
+                </div>
+                <button class="btn-cours" style="width:auto; margin-top:0;" onclick="document.getElementById('ajout_cours_modal').style.display='block'">+ Nouveau cours</button>
+            </div>
+            <div class="liste-cours" id="mes_cours">
+                <div style="grid-column:1/-1; text-align:center; padding:30px; color:var(--color-neutral-400);">Chargement...</div>
+            </div>
+        </section>
+
+        <!-- Section : Q&A -->
+        <section id="section-qa" class="page-section">
+            <p class="page-title">Questions des Étudiants</p>
+            <p class="page-subtitle">Répondez aux questions posées sur vos leçons. Cliquez sur "Q&amp;A" dans la liste des leçons d'un cours.</p>
+            <div style="background:white; border-radius:var(--radius-md); border:1px solid var(--color-neutral-200); padding:24px; box-shadow:var(--shadow-sm); color:var(--color-neutral-600);">
+                <p style="margin:0;">Pour accéder aux questions des étudiants, allez dans <strong>Mes Cours</strong>, ouvrez un cours, sélectionnez une leçon et cliquez sur le bouton <strong>Q&amp;A</strong>.</p>
+                <button class="btn-cours" style="width:auto; margin-top:16px;" onclick="showSection('cours')">Aller vers Mes Cours</button>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- ======= MODALES ======= -->
+
+<!-- Modal : Ajouter un cours -->
+<div id="ajout_cours_modal" class="modal">
+    <div class="modal-content" style="width:80%; max-width:540px;">
+        <span class="close-btn" onclick="fermerModal('ajout_cours_modal')">&times;</span>
+        <h2 style="margin-bottom:20px;">Créer un nouveau cours</h2>
+        <form id="form_ajout_cours" onsubmit="ajouterCours(event)">
+            <div class="champ">
+                <label>Titre du cours :</label>
+                <input type="text" id="cours_titre" required>
+            </div>
+            <div class="champ">
+                <label>Description :</label>
+                <textarea id="cours_description" required rows="3"></textarea>
+            </div>
+            <div class="champ">
+                <label>Module :</label>
+                <select id="cours_module_id" required></select>
+            </div>
+            <button type="submit">Créer le cours</button>
+            <p id="cours_msg" style="margin-top:10px;"></p>
+        </form>
+    </div>
+</div>
+
+<!-- Modal : Contenu d'un cours (leçons) -->
+<div id="cours_detail_modal" class="modal">
+    <div class="modal-content" style="width:85%; max-width:780px;">
+        <span class="close-btn" onclick="fermerModal('cours_detail_modal')">&times;</span>
+        <h2 id="cours_detail_titre" style="margin-bottom:16px;">Leçons</h2>
+        <div id="cours_detail_contenu">Chargement...</div>
+        <hr style="margin:20px 0; border:none; border-top:1px solid var(--color-neutral-200);">
+        <h3 style="margin-bottom:12px;">Ajouter une leçon</h3>
+        <form id="form_ajout_lecon" onsubmit="ajouterLecon(event)">
+            <input type="hidden" id="lecon_cours_id">
+            <div class="champ">
+                <label>Titre de la leçon :</label>
+                <input type="text" id="lecon_titre" required>
+            </div>
+            <div class="champ">
+                <label>Type de contenu :</label>
+                <select id="lecon_type" onchange="toggleChampLecon()">
+                    <option value="pdf">Document PDF</option>
+                    <option value="video">Vidéo (URL)</option>
+                </select>
+            </div>
+            <div id="champ_upload" class="champ">
+                <label>Fichier PDF :</label>
+                <input type="file" id="lecon_fichier" accept=".pdf">
+            </div>
+            <div id="champ_url" class="champ" style="display:none;">
+                <label>URL de la vidéo :</label>
+                <input type="url" id="lecon_url_video" placeholder="https://...">
+            </div>
+            <button type="submit">Ajouter la leçon</button>
+            <p id="lecon_msg" style="margin-top:10px;"></p>
+        </form>
+    </div>
+</div>
+
+<!-- Modal : Créer un Quiz -->
+<div id="quiz_modal" class="modal">
+    <div class="modal-content" style="width:85%; max-width:720px;">
+        <span class="close-btn" onclick="fermerModal('quiz_modal')">&times;</span>
+        <h2 id="quiz_modal_titre" style="margin-bottom:16px;">Créer un Quiz</h2>
+        <input type="hidden" id="quiz_lecon_id">
+        <div style="display:flex; gap:16px; margin-bottom:16px;">
+            <div class="champ" style="flex:1; margin-bottom:0;">
+                <label>Durée (minutes) :</label>
+                <input type="number" id="quiz_duree_minutes" value="10" min="1" max="120">
+            </div>
+            <div class="champ" style="flex:1; margin-bottom:0;">
+                <label>Score minimum (%) :</label>
+                <input type="number" id="quiz_score_minimum" value="50" min="0" max="100">
             </div>
         </div>
+        <div id="liste_questions"></div>
+        <button onclick="ajouterQuestion()" style="background:var(--color-neutral-600); color:white; border:none; padding:8px 16px; border-radius:var(--radius-sm); cursor:pointer; font-family:var(--font-base); font-size:0.875rem; margin-top:8px;">+ Ajouter une question</button>
+        <hr style="margin:16px 0; border:none; border-top:1px solid var(--color-neutral-200);">
+        <button onclick="sauvegarderQuiz()" style="background:var(--color-success); color:white; border:none; padding:10px 20px; border-radius:var(--radius-sm); cursor:pointer; font-weight:600; font-family:var(--font-base); width:100%;">Sauvegarder le Quiz</button>
+        <p id="quiz_msg" style="margin-top:10px; text-align:center;"></p>
     </div>
+</div>
 
-    <!-- Modal: Add Course -->
-    <div id="cours_modal" class="modal">
-        <div class="modal-content" style="width: 80%; max-width: 600px;">
-            <span class="close-btn" onclick="fermerModal('cours_modal')">&times;</span>
-            <h2 id="modal_titre_cours">Ajouter un cours</h2>
-            <form id="form_ajout_cours" onsubmit="ajouterCours(event)">
-                <div class="champ">
-                    <label>Module :</label>
-                    <select id="cours_module_id" required>
-                        <option value="">Sélectionnez un module...</option>
-                    </select>
-                </div>
-                <div class="champ">
-                    <label>Titre du cours :</label>
-                    <input type="text" id="cours_titre" required>
-                </div>
-                <div class="champ">
-                    <label>Description :</label>
-                    <textarea id="cours_description" required></textarea>
-                </div>
-                <button type="submit">Ajouter</button>
-                <p id="cours_msg"></p>
-            </form>
-        </div>
+<!-- Modal : Répondre aux Q&A -->
+<div id="reponses_modal" class="modal">
+    <div class="modal-content" style="width:80%; max-width:660px;">
+        <span class="close-btn" onclick="fermerModal('reponses_modal')">&times;</span>
+        <h2 style="margin-bottom:16px;">Répondre aux questions</h2>
+        <input type="hidden" id="rep_lecon_id">
+        <div id="liste_reponses" style="max-height:420px; overflow-y:auto; padding-right:4px;"></div>
     </div>
+</div>
 
-
-
-    <!-- Modal pour le chat (Classe) -->
-    <div id="chat_modal" class="modal">
-        <div class="modal-content" style="width: 80%; max-width: 600px;">
-            <span class="close-btn" onclick="fermerModal('chat_modal')">&times;</span>
-            <h2 id="chat_titre">Classe : Chat</h2>
-            
-            <div id="chat_messages" style="height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; background: #fafafa;">
-                <!-- Messages affichés ici -->
+<!-- Modal : Classe (Chat WhatsApp-style) -->
+<div id="chat_modal" class="chat-modal-overlay">
+    <div class="chat-window">
+        <div class="chat-header">
+            <div class="chat-header-avatar" id="chat_avatar_letter">C</div>
+            <div class="chat-header-info">
+                <h3 id="chat_titre">Classe</h3>
+                <small>Classe virtuelle en direct</small>
             </div>
-
-            <form onsubmit="envoyerMessage(event, 'enseignant')">
-                <input type="hidden" id="chat_cours_id">
-                <div style="display:flex; gap: 10px;">
-                    <input type="text" id="chat_input" required placeholder="Votre message..." style="flex:1; padding:10px; border:1px solid #ccc;">
-                    <button type="submit" style="padding:10px 20px; background:#0056b3; color:white; border:none; cursor:pointer;">Envoyer</button>
-                </div>
-            </form>
+            <button class="chat-close-btn" onclick="fermerChatModal()" title="Fermer">&times;</button>
+        </div>
+        <input type="hidden" id="chat_cours_id">
+        <div class="chat-messages-area" id="chat_messages">
+            <div class="chat-empty">Aucun message pour l'instant.<br>Soyez le premier a ecrire !</div>
+        </div>
+        <div class="chat-input-bar">
+            <textarea class="chat-text-input" id="chat_input" placeholder="Ecrire un message..." rows="1"
+                onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); envoyerMessage();}"
+                oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
+            <button class="chat-send-btn" onclick="envoyerMessage()" title="Envoyer">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
         </div>
     </div>
+</div>
 
-    <!-- Modal pour les quiz -->
-    <div id="quiz_modal" class="modal">
-        <div class="modal-content" style="width: 80%; max-width: 600px;">
-            <span class="close-btn" onclick="fermerModal('quiz_modal')">&times;</span>
-            <h2 id="quiz_titre_modal">Ajouter un quiz à la leçon</h2>
-            <form id="form_ajout_quiz" onsubmit="ajouterQuiz(event)">
-                <input type="hidden" id="quiz_lecon_id">
-                <div class="champ">
-                    <label>Titre du Quiz :</label>
-                    <input type="text" id="quiz_titre" required>
-                </div>
-                <div style="display:flex; gap:10px;">
-                    <div class="champ" style="flex:1;">
-                        <label>Durée (minutes, 0 = illimité) :</label>
-                        <input type="number" id="quiz_duree" min="0" value="0" required>
-                    </div>
-                    <div class="champ" style="flex:1;">
-                        <label>Score minimum requis (%) :</label>
-                        <input type="number" id="quiz_seuil" min="1" max="100" value="50" required>
-                    </div>
-                </div>
-                <div class="champ">
-                    <label>Questions :</label>
-                    <div id="quiz_builder" style="border: 1px solid #ccc; padding: 10px; background: #f9f9f9; max-height: 400px; overflow-y: auto;">
-                        <!-- Questions ajoutées dynamiquement -->
-                    </div>
-                    <button type="button" onclick="ajouterQuestionBuilder()" style="margin-top:10px; background:#28a745; color:white; border:none; padding:8px 12px; cursor:pointer; border-radius:3px;">+ Ajouter une question</button>
-                </div>
-                <button type="submit" id="btn_submit_quiz" style="margin-top:20px;">Ajouter le quiz</button>
-                <p id="quiz_msg"></p>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Commentaires / Q&A -->
-    <div id="reponses_modal" class="modal">
-        <div class="modal-content" style="width: 80%; max-width: 650px;">
-            <span class="close-btn" onclick="fermerModal('reponses_modal')">&times;</span>
-            <h2>Répondre aux questions</h2>
-            <input type="hidden" id="rep_lecon_id">
-            <div id="liste_reponses" style="max-height:400px; overflow-y:auto; margin-bottom:15px; padding-right:5px;"></div>
-        </div>
-    </div>
-
-    <script src="assets/js/auth.js"></script>
-    <script src="assets/js/enseignant.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/enseignant.js"></script>
 </body>
 </html>
+

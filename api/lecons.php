@@ -9,14 +9,19 @@ require_once 'config/database.php';
 $method = $_SERVER['REQUEST_METHOD'];
 
 if($method == 'GET') {
-    // Si un ID de cours est fourni, on récupère toutes ses leçons
-    if(isset($_GET['cours_id'])) {
+    if(isset($_GET['all'])) {
+        // Retourne le nombre total de leçons dans toute la base (pour calculer la progression globale)
+        $stmt = $pdo->query("SELECT COUNT(*) as total FROM lecons");
+        $row = $stmt->fetch();
+        echo json_encode(['total' => intval($row['total'])]);
+    } elseif(isset($_GET['cours_id'])) {
         $stmt = $pdo->prepare("SELECT * FROM lecons WHERE cours_id = ?");
         $stmt->execute([$_GET['cours_id']]);
         echo json_encode($stmt->fetchAll());
     } else {
         echo json_encode([]);
     }
+
 } elseif($method == 'POST') {
     // --- AJOUT D'UNE NOUVELLE LEÇON ---
     // Les données sont envoyées en JSON depuis l'interface (fetch)

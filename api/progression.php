@@ -5,7 +5,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if($method == 'GET') {
     if(isset($_GET['etudiant_id'])) {
-        $stmt = $pdo->prepare("SELECT * FROM progression_etudiant WHERE etudiant_id = ?");
+        $stmt = $pdo->prepare("SELECT p.*, l.titre as lecon_titre, l.type as lecon_type FROM progression_etudiant p JOIN lecons l ON p.lecon_id = l.id WHERE p.etudiant_id = ?");
         $stmt->execute([$_GET['etudiant_id']]);
         echo json_encode($stmt->fetchAll());
     }

@@ -3,140 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FONDA WORKPLACE - Espace Étudiant</title>
-    <!-- Projet etudiant de ONANA GREGOIRE LEGRAND (24G2060) -->
+    <title>FONDA WORKPLACE — Espace Étudiant</title>
+    <!-- Projet de ONANA GREGOIRE LEGRAND (24G2060) -->
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-    <div class="navbar">
-        <h1>FONDA WORKPLACE</h1>
-        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+
+<div class="app-layout">
+
+    <!-- ======= SIDEBAR ======= -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <span class="logo-name">Fonda Workplace</span>
+            <span class="logo-sub">Espace Étudiant</span>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section-label">Principal</div>
+            <a onclick="showSection('accueil')" id="nav-accueil" class="active">
+                <span class="nav-dot"></span><span>Tableau de bord</span>
+            </a>
+            <a onclick="showSection('cours')" id="nav-cours">
+                <span class="nav-dot"></span><span>Mes Cours</span>
+            </a>
+            <a onclick="showSection('notes')" id="nav-notes">
+                <span class="nav-dot"></span><span>Mes Notes</span>
+            </a>
+            <a onclick="showSection('certificats')" id="nav-certificats">
+                <span class="nav-dot"></span><span>Certificats</span>
+            </a>
+            <div class="sidebar-section-label">Compte</div>
+            <a href="profil.html">
+                <span class="nav-dot"></span><span>Mon Profil</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div id="sidebar_user" style="font-weight:600; color:rgba(255,255,255,0.7);"></div>
+            <div style="margin-top:3px; font-size:0.68rem;">Étudiant</div>
+        </div>
+    </aside>
+
+    <!-- ======= HEADER ======= -->
+    <header class="app-header">
+        <div class="app-header-title" id="page_title">Tableau de bord</div>
+        <div class="app-header-right">
             <div style="position:relative;">
-                <input type="text" id="input_recherche" placeholder="Rechercher..." oninput="rechercheGlobale(this.value)" style="padding: 6px 12px; border-radius: 20px; border: none; font-size: 0.9rem; width: 200px;">
-                <div id="dropdown_recherche" style="display:none; position:absolute; top:36px; left:0; width:300px; background:white; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.15); z-index:1000; max-height:250px; overflow-y:auto;"></div>
+                <input type="text" id="input_recherche" class="header-search" placeholder="Rechercher..." oninput="rechercheGlobale(this.value)">
+                <div id="dropdown_recherche" style="display:none; position:absolute; top:38px; right:0; width:300px; background:white; border-radius:var(--radius-md); box-shadow:var(--shadow-lg); z-index:1000; max-height:260px; overflow-y:auto; border:1px solid var(--color-neutral-200);"></div>
             </div>
             <div style="position:relative;">
-                <button onclick="toggleNotifications()" style="background:none;border:none;cursor:pointer;font-size:1.3rem;position:relative;" title="Notifications">
-                    Notifs <span id="badge_notif" style="display:none;position:absolute;top:-5px;right:-5px;background:red;color:white;border-radius:50%;width:18px;height:18px;font-size:0.65rem;line-height:18px;text-align:center;">0</span>
+                <button class="notif-btn" onclick="toggleNotifications()">
+                    Notifs&nbsp;<span id="badge_notif" style="display:none; position:absolute; top:-5px; right:-5px; background:var(--color-danger); color:white; border-radius:50%; width:16px; height:16px; font-size:0.58rem; line-height:16px; text-align:center; font-weight:700;">0</span>
                 </button>
-                <div id="dropdown_notif" style="display:none;position:absolute;top:40px;right:0;width:300px;background:white;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,0.15);z-index:1000;padding:10px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong>Notifications</strong><button onclick="marquerToutLu()" style="font-size:0.75rem;background:none;border:none;color:#0056b3;cursor:pointer;">Tout lire</button></div>
-                    <div id="liste_notif">Chargement...</div>
+                <div id="dropdown_notif" style="display:none; position:absolute; top:42px; right:0; width:300px; background:white; border-radius:var(--radius-md); box-shadow:var(--shadow-lg); z-index:1000; padding:12px; border:1px solid var(--color-neutral-200);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <strong style="font-size:0.85rem;">Notifications</strong>
+                        <button onclick="marquerToutLu()" style="font-size:0.75rem; background:none; border:none; color:var(--color-primary); cursor:pointer; font-family:var(--font-base);">Tout lire</button>
+                    </div>
+                    <div id="liste_notif" style="max-height:200px; overflow-y:auto;">Chargement...</div>
                 </div>
             </div>
-            <a href="profil.html" style="color:white;font-size:1rem;text-decoration:none;" title="Mon profil">Profil</a>
-            <span id="nom_utilisateur" style="font-weight: bold;"></span>
+            <span class="app-header-user" id="nom_utilisateur"></span>
             <button onclick="deconnexion()" class="btn-quitter">Déconnexion</button>
         </div>
-    </div>
+    </header>
 
-    <div class="contenu-principal">
-        <h2>Mes Modules et Cours</h2>
-        <p>Voici les cours disponibles pour votre apprentissage.</p>
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-            <button class="btn-cours" style="background-color:#17a2b8;" onclick="afficherProgression()">Mes Notes</button>
-            <button class="btn-cours" style="background-color:#d4af37; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;" onclick="genererCertificats()">Obtenir mes Certificats</button>
-        </div>
-        
-        <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px; border: 1px solid #ddd;">
-            <h3 style="margin-top:0;">Progression Globale</h3>
-            <div style="width: 100%; background-color: #e9ecef; border-radius: 5px; overflow: hidden; margin-top: 10px;">
-                <div id="barre_progression_globale" style="width: 0%; height: 20px; background-color: #28a745; text-align: center; color: white; line-height: 20px; font-size: 12px;">0%</div>
-            </div>
-        </div>
+    <!-- ======= MAIN CONTENT ======= -->
+    <main class="app-main">
 
-        <div class="liste-cours" id="mes_cours">
-            <div style="text-align:center; width: 100%;">
-                Chargement des cours...
-            </div>
-        </div>
-    </div>
+        <!-- Section : Tableau de bord -->
+        <section id="section-accueil" class="page-section active">
+            <p class="page-title">Tableau de bord</p>
+            <p class="page-subtitle">Bienvenue sur votre espace d'apprentissage.</p>
 
-    <!-- Modal pour les lecons -->
-    <div id="lecon_modal" class="modal">
-        <div class="modal-content" style="width: 80%; max-width: 800px;">
-            <span class="close-btn" onclick="fermerModal('lecon_modal')">&times;</span>
-            <h2 id="modal_titre">Titre du cours</h2>
-            <div id="modal_contenu">
-                <!-- Les leçons s'afficheront ici -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal pour le chat (Classe) -->
-    <div id="chat_modal" class="modal">
-        <div class="modal-content" style="width: 80%; max-width: 600px;">
-            <span class="close-btn" onclick="fermerModal('chat_modal')">&times;</span>
-            <h2 id="chat_titre">Classe : Chat</h2>
-            
-            <div id="chat_messages" style="height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; background: #fafafa;">
-                <!-- Messages affichés ici -->
-            </div>
-
-            <form onsubmit="envoyerMessage(event, 'etudiant')">
-                <input type="hidden" id="chat_cours_id">
-                <div style="display:flex; gap: 10px;">
-                    <input type="text" id="chat_input" required placeholder="Votre message..." style="flex:1; padding:10px; border:1px solid #ccc;">
-                    <button type="submit" style="padding:10px 20px; background:#0056b3; color:white; border:none; cursor:pointer;">Envoyer</button>
+            <div class="stat-grid">
+                <div class="stat-card" style="grid-column: span 2;">
+                    <div class="stat-card-label">Progression globale</div>
+                    <div class="stat-card-value" id="stat_pct">0%</div>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" id="barre_progression_globale" style="width:0%"></div>
+                    </div>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal pour la progression -->
-    <div id="progression_modal" class="modal">
-        <div class="modal-content" style="width: 80%; max-width: 600px;">
-            <span class="close-btn" onclick="fermerModal('progression_modal')">&times;</span>
-            <h2>Mes Notes</h2>
-            <div id="progression_contenu" style="margin-top: 15px;">
+                <div class="stat-card">
+                    <div class="stat-card-label">Cours disponibles</div>
+                    <div class="stat-card-value" id="stat_cours_count">—</div>
+                    <div class="stat-card-sub">dans votre catalogue</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Leçons complétées</div>
+                    <div class="stat-card-value" id="stat_lecons_count">—</div>
+                    <div class="stat-card-sub">sur le total disponible</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Certificats obtenus</div>
+                    <div class="stat-card-value" id="stat_certifs_count">—</div>
+                    <div class="stat-card-sub"><a href="#" onclick="showSection('certificats'); return false;">Voir mes certificats</a></div>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Modal Lecteur Vidéo -->
-    <div id="video_modal" class="modal">
-        <div class="modal-content" style="width: 80%; max-width: 800px; text-align: center;">
-            <span class="close-btn" onclick="fermerModalVideo()">&times;</span>
-            <h2 id="video_titre">Titre de la vidéo</h2>
-            <input type="hidden" id="video_lecon_id">
-            <video id="lecteur_video" width="100%" controls ontimeupdate="majProgressionVideo()">
-                <source id="video_source" src="" type="video/mp4">
-                Votre navigateur ne supporte pas la vidéo.
-            </video>
-            <p id="video_progression_text" style="font-weight: bold; margin-top: 10px;">Visionné : 0%</p>
-        </div>
-    </div>
-
-    <!-- Modal Passer le Quiz -->
-    <div id="passer_quiz_modal" class="modal">
-        <div class="modal-content" style="width: 80%; max-width: 600px;">
-            <span class="close-btn" onclick="fermerModal('passer_quiz_modal')">&times;</span>
-            <h2 id="titre_quiz_etudiant">Quiz</h2>
-            <div id="timer_quiz" style="display:none; font-size:1.4rem; font-weight:bold; color:red; text-align:center; margin:10px 0;">Temps restant : <span id="timer_val">--:--</span></div>
-            <input type="hidden" id="passer_quiz_eval_id">
-            <input type="hidden" id="passer_quiz_lecon_id">
-            <div id="contenu_quiz_etudiant" style="margin-top: 15px; text-align: left;">
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <button class="btn-cours" style="width:auto; margin-top:0;" onclick="showSection('cours')">Accéder à mes cours</button>
+                <button class="btn-cours" style="width:auto; margin-top:0; background:var(--color-neutral-600);" onclick="showSection('notes')">Voir mes notes</button>
             </div>
-            <button id="btn_valider_quiz" style="display:none; margin-top:20px; background:#28a745; color:white; border:none; padding:10px; cursor:pointer; border-radius: 5px;" onclick="soumettreQuiz()">Valider mes réponses</button>
-            <p id="quiz_resultat_msg"></p>
-        </div>
-    </div>
+        </section>
 
-    <!-- Modal Commentaires -->
-    <div id="commentaires_modal" class="modal">
-        <div class="modal-content" style="width: 80%; max-width: 650px;">
-            <span class="close-btn" onclick="fermerModal('commentaires_modal')">&times;</span>
-            <h2>Questions &amp; Réponses</h2>
-            <input type="hidden" id="comm_lecon_id">
-            <div id="liste_commentaires" style="max-height:350px; overflow-y:auto; margin-bottom:15px;"></div>
-            <div style="border-top:1px solid #eee; padding-top:15px;">
-                <textarea id="input_commentaire" rows="3" placeholder="Posez votre question..." style="width:100%; box-sizing:border-box; padding:10px; border:1.5px solid #ddd; border-radius:8px; font-family:inherit;"></textarea>
-                <button onclick="posterCommentaire()" style="margin-top:8px; background:#0056b3; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer;">Envoyer</button>
+        <!-- Section : Mes Cours -->
+        <section id="section-cours" class="page-section">
+            <p class="page-title">Mes Cours</p>
+            <p class="page-subtitle">Cliquez sur un cours pour accéder à ses leçons et évaluations.</p>
+            <div class="liste-cours" id="mes_cours">
+                <div style="grid-column:1/-1; text-align:center; padding:30px; color:var(--color-neutral-400);">Chargement des cours...</div>
             </div>
+        </section>
+
+        <!-- Section : Mes Notes -->
+        <section id="section-notes" class="page-section">
+            <p class="page-title">Mes Notes</p>
+            <p class="page-subtitle">Résultats de vos évaluations et progression par leçon.</p>
+            <div class="table-card">
+                <table class="content-table">
+                    <thead>
+                        <tr>
+                            <th>Leçon</th>
+                            <th>Score au quiz</th>
+                            <th>Progression</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody id="notes_body">
+                        <tr><td colspan="5" style="text-align:center; padding:24px; color:var(--color-neutral-400);">Chargement...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section : Certificats -->
+        <section id="section-certificats" class="page-section">
+            <p class="page-title">Mes Certificats</p>
+            <p class="page-subtitle">Certificats d'achèvement de module obtenus.</p>
+            <div id="certifs_container" class="liste-cours">
+                <div style="grid-column:1/-1; text-align:center; padding:30px; color:var(--color-neutral-400);">Chargement...</div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- ======= MODALES ======= -->
+
+<!-- Modal : Leçons d'un cours -->
+<div id="lecon_modal" class="modal">
+    <div class="modal-content" style="width:80%; max-width:720px;">
+        <span class="close-btn" onclick="fermerModal('lecon_modal')">&times;</span>
+        <h2 id="modal_titre" style="margin-bottom:16px;">Leçons</h2>
+        <div id="modal_contenu">Chargement...</div>
+    </div>
+</div>
+
+<!-- Modal : Lecteur Vidéo -->
+<div id="video_modal" class="modal">
+    <div class="modal-content" style="width:85%; max-width:860px;">
+        <span class="close-btn" onclick="fermerModalVideo()">&times;</span>
+        <h2 id="video_titre" style="margin-bottom:12px;">Vidéo</h2>
+        <input type="hidden" id="video_lecon_id">
+        <video id="lecteur_video" controls style="width:100%; border-radius:var(--radius-sm); background:#000;" ontimeupdate="majProgressionVideo()">
+            Votre navigateur ne supporte pas la lecture de vidéos.
+        </video>
+        <p id="video_progression_text" style="text-align:center; margin-top:8px; font-size:0.85rem; color:var(--color-neutral-600);">Visionné : 0%</p>
+    </div>
+</div>
+
+<!-- Modal : Quiz -->
+<div id="passer_quiz_modal" class="modal">
+    <div class="modal-content" style="width:80%; max-width:620px;">
+        <span class="close-btn" onclick="fermerModal('passer_quiz_modal')">&times;</span>
+        <h2 id="titre_quiz_etudiant" style="margin-bottom:12px;">Quiz</h2>
+        <div id="timer_quiz" style="display:none; font-size:1.1rem; font-weight:700; color:var(--color-danger); text-align:center; margin-bottom:12px; padding:10px 16px; background:var(--color-neutral-50); border-radius:var(--radius-sm); border:1px solid var(--color-neutral-200);">
+            Temps restant : <span id="timer_val">--:--</span>
+        </div>
+        <input type="hidden" id="passer_quiz_eval_id">
+        <input type="hidden" id="passer_quiz_lecon_id">
+        <div id="contenu_quiz_etudiant" style="margin-top:8px;"></div>
+        <button onclick="soumettreQuiz()" style="margin-top:20px; background:var(--color-success); color:white; border:none; padding:10px 20px; border-radius:var(--radius-sm); cursor:pointer; font-weight:600; font-family:var(--font-base); width:100%; font-size:0.9rem;">Valider le Quiz</button>
+        <div id="resultat_quiz" style="margin-top:12px; text-align:center; font-weight:600;"></div>
+    </div>
+</div>
+
+<!-- Modal : Q&A -->
+<div id="commentaires_modal" class="modal">
+    <div class="modal-content" style="width:80%; max-width:660px;">
+        <span class="close-btn" onclick="fermerModal('commentaires_modal')">&times;</span>
+        <h2 style="margin-bottom:16px;">Questions &amp; Réponses</h2>
+        <input type="hidden" id="comm_lecon_id">
+        <div id="liste_commentaires" style="max-height:360px; overflow-y:auto; margin-bottom:16px;"></div>
+        <div style="border-top:1px solid var(--color-neutral-200); padding-top:16px; display:flex; gap:8px;">
+            <input type="text" id="comm_input" placeholder="Posez votre question..." style="flex:1; padding:9px 12px; border:1px solid var(--color-neutral-200); border-radius:var(--radius-sm); font-family:var(--font-base); font-size:0.875rem;">
+            <button onclick="envoyerCommentaire()" style="background:var(--color-primary); color:white; border:none; padding:9px 16px; border-radius:var(--radius-sm); cursor:pointer; font-weight:600; font-family:var(--font-base); white-space:nowrap;">Envoyer</button>
         </div>
     </div>
+</div>
 
-    <script src="assets/js/auth.js"></script>
-    <script src="assets/js/etudiant.js"></script>
+<!-- Modal : Chat de Classe (WhatsApp-style) -->
+<div id="chat_modal" class="chat-modal-overlay">
+    <div class="chat-window">
+        <div class="chat-header">
+            <div class="chat-header-avatar" id="chat_avatar_letter">C</div>
+            <div class="chat-header-info">
+                <h3 id="chat_titre">Classe</h3>
+                <small>Classe virtuelle en direct</small>
+            </div>
+            <button class="chat-close-btn" onclick="fermerChatModal()" title="Fermer">&times;</button>
+        </div>
+        <input type="hidden" id="chat_cours_id">
+        <div class="chat-messages-area" id="chat_messages">
+            <div class="chat-empty">Aucun message pour l'instant.<br>Soyez le premier a ecrire !</div>
+        </div>
+        <div class="chat-input-bar">
+            <textarea class="chat-text-input" id="chat_input" placeholder="Ecrire un message..." rows="1"
+                onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); envoyerMessage();}"
+                oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
+            <button class="chat-send-btn" onclick="envoyerMessage()" title="Envoyer">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/etudiant.js"></script>
 </body>
 </html>

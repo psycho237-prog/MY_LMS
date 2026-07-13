@@ -116,27 +116,124 @@ async function chargerProgressionGlobale() {
             mapProgression[p.lecon_id] = p;
         });
         
-        // Calcul très simple pour la barre globale : % de leçons commencées ou terminées
-        // En vrai, on devrait compter le nombre total de leçons dans tous les cours de l'étudiant.
-        // Ici on se basera sur les leçons avec progression > 0
-        let totalLeconsAvecProgression = progressions.length;
         let nbCompleted = progressions.filter(p => (p.score !== null && p.score >= 50) || p.progression_pourcentage >= 80).length;
         
-        // Récupérer le nombre total de leçons dans la DB pour un calcul exact (Simplifié ici)
-        let resLecons = await fetch('api/lecons.php'); // API needs to return all lessons, but let's just do a dummy if not
-        let leconsTotal = await resLecons.json();
-        let total = leconsTotal.length || 1; // Fallback
+        // Récupérer le nombre total de leçons dans la DB (ajout du endpoint ?all=1)
+        let resLecons = await fetch('api/lecons.php?all=1'); 
+        let dataLecons = await resLecons.json();
+        let total = dataLecons.total || 1; 
         
         let pourcentageGlobal = Math.round((nbCompleted / total) * 100);
         if (pourcentageGlobal > 100) pourcentageGlobal = 100;
         
+        // MAJ de la nouvelle UI (dashboard ERP)
         let barre = document.getElementById("barre_progression_globale");
-        if(barre) {
-            barre.style.width = pourcentageGlobal + "%";
-            barre.textContent = pourcentageGlobal + "%";
-        }
+        if(barre) barre.style.width = pourcentageGlobal + "%";
+        
+        let txtPct = document.getElementById("stat_pct");
+        if(txtPct) txtPct.textContent = pourcentageGlobal + "%";
+
+        let txtLecons = document.getElementById("stat_lecons_count");
+        if(txtLecons) txtLecons.textContent = nbCompleted + " / " + total;
+
     } catch(e) {
         console.log("Erreur progression globale");
+    }
+}
+
+// ===== GESTION DU LAYOUT ERP =====
+function showSection(sectionId) {
+    // Masquer toutes les sections
+    document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+    // Afficher la cible
+    let target = document.getElementById('section-' + sectionId);
+    if(target) target.classList.add('active');
+    
+    // Mettre à jour la sidebar
+    document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+    let navItem = document.getElementById('nav-' + sectionId);
+    if(navItem) navItem.classList.add('active');
+
+    // Mettre à jour le titre du header
+    let pageTitle = "Tableau de bord";
+    if(sectionId === 'cours') pageTitle = "Mes Cours";
+    if(sectionId === 'notes') pageTitle = "Mes Notes";
+    if(sectionId === 'certificats') pageTitle = "Mes Certificats";
+    let headerTitle = document.getElementById("page_title");
+    if(headerTitle) headerTitle.textContent = pageTitle;
+
+    // Charger les données dynamiques selon l'onglet
+    if(sectionId === 'notes') afficherNotes();
+    if(sectionId === 'certificats') afficherCertificats();
+}
+
+// Fonction pour afficher les notes dans l'onglet dédié
+async function afficherNotes() {
+    let tbody = document.getElementById("notes_body");
+    if(!tbody) return;
+    
+    let id_etudiant = localStorage.getItem("id_connecte");
+    try {
+        let res = await fetch('api/progression.php?etudiant_id=' + id_etudiant);
+        let progressions = await res.json();
+        
+        if (progressions.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--color-neutral-400);">Aucune donnée de progression.</td></tr>';
+            return;
+        }
+
+        let html = '';
+        progressions.forEach(p => {
+            let scoreStr = p.score !== null ? `<span class="badge ${p.score >= 50 ? 'badge-success' : 'badge-danger'}">${p.score}%</span>` : `<span class="badge badge-neutral">—</span>`;
+            let statusBadge = '';
+            if ((p.score !== null && p.score >= 50) || p.progression_pourcentage >= 80) {
+                statusBadge = '<span class="badge badge-success">Validée</span>';
+            } else {
+                statusBadge = '<span class="badge badge-warning">En cours</span>';
+            }
+
+            html += `<tr>
+                <td style="font-weight:500;">${p.lecon_titre || ('Leçon #' + p.lecon_id)}</td>
+                <td>${scoreStr}</td>
+                <td><div class="progress-bar-wrap" style="width:100px; margin:0;"><div class="progress-bar-fill" style="width:${p.progression_pourcentage}%"></div></div><div style="font-size:0.7rem; color:var(--color-neutral-400); margin-top:2px;">${Math.round(p.progression_pourcentage)}%</div></td>
+                <td style="color:var(--color-neutral-400); font-size:0.8rem;">${p.date_completion || '-'}</td>
+                <td>${statusBadge}</td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+    } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="5">Erreur de chargement</td></tr>';
+    }
+}
+
+// Fonction pour afficher les certificats dans l'onglet dédié
+async function afficherCertificats() {
+    let container = document.getElementById("certifs_container");
+    if(!container) return;
+    let id_etudiant = localStorage.getItem("id_connecte");
+
+    try {
+        let res = await fetch('api/certificats.php?etudiant_id=' + id_etudiant);
+        let certifs = await res.json();
+        
+        let statCount = document.getElementById("stat_certifs_count");
+        if(statCount) statCount.textContent = certifs.length;
+
+        if(certifs.length === 0) {
+            container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:var(--color-neutral-400);">Vous n\'avez pas encore obtenu de certificats.</div>';
+            return;
+        }
+
+        container.innerHTML = certifs.map(c => `
+            <div class="carte-cours">
+                <h3>Certificat de Module</h3>
+                <p><strong>Code :</strong> ${c.code_unique}<br><strong>Délivré le :</strong> ${new Date(c.date_emission).toLocaleDateString()}</p>
+                <button class="btn-cours" onclick="window.open('certificat.html?code=${c.code_unique}', '_blank')">Voir / Imprimer</button>
+            </div>
+        `).join('');
+
+    } catch(e) {
+        container.innerHTML = '<p>Erreur</p>';
     }
 }
 
@@ -419,39 +516,66 @@ async function genererCertificats() {
 
 async function ouvrirChat(id, titre) {
     document.getElementById("chat_cours_id").value = id;
-    document.getElementById("chat_titre").textContent = "Classe : " + titre;
-    document.getElementById("chat_modal").style.display = "block";
-    chargerMessages(id);
-    window.chatInterval = setInterval(() => chargerMessages(id), 5000);
+    let titreEl = document.getElementById("chat_titre");
+    if(titreEl) titreEl.textContent = titre;
+    let avatarEl = document.getElementById("chat_avatar_letter");
+    if(avatarEl) avatarEl.textContent = titre.charAt(0).toUpperCase();
+    let overlay = document.getElementById("chat_modal");
+    if(overlay) overlay.classList.add('open');
+    await chargerMessages(id);
+    if(window.chatInterval) clearInterval(window.chatInterval);
+    window.chatInterval = setInterval(() => chargerMessages(id), 4000);
+}
+
+function fermerChatModal() {
+    let overlay = document.getElementById("chat_modal");
+    if(overlay) overlay.classList.remove('open');
+    if(window.chatInterval) clearInterval(window.chatInterval);
 }
 
 async function chargerMessages(cours_id) {
     var container = document.getElementById("chat_messages");
+    if(!container) return;
+    let moi_id = localStorage.getItem("id_connecte");
     try {
         let res = await fetch('api/chat.php?cours_id=' + cours_id);
         let messages = await res.json();
-        let html = "";
+        if(!messages || messages.length === 0) {
+            container.innerHTML = '<div class="chat-empty">Aucun message pour l\'instant.<br>Soyez le premier a ecrire !</div>';
+            return;
+        }
+        let html = '';
+        let lastDate = '';
         messages.forEach(m => {
-            html += "<div style='margin-bottom: 8px;'>";
-            html += "<strong style='color:#0056b3;'>" + m.nom_user + "</strong> ";
-            html += "<span style='font-size:0.8em; color:#999;'>(" + m.date_envoi + ")</span><br>";
-            html += m.message;
-            html += "</div>";
+            let isMe = String(m.user_id) === String(moi_id);
+            let side = isMe ? 'me' : 'other';
+            let d = new Date(m.date_envoi);
+            let dateStr = d.toLocaleDateString('fr-FR', {day:'2-digit',month:'short',year:'numeric'});
+            if(dateStr !== lastDate) {
+                html += `<div class="chat-date-sep"><span>${dateStr}</span></div>`;
+                lastDate = dateStr;
+            }
+            let heure = d.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'});
+            html += `<div class="chat-bubble-wrap ${side}">`;
+            if(!isMe) html += `<div class="chat-sender-name">${m.nom_user}</div>`;
+            html += `<div class="chat-bubble">${m.message}<div class="chat-bubble-time">${heure}</div></div>`;
+            html += '</div>';
         });
+        let wasAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 40;
         container.innerHTML = html;
-        container.scrollTop = container.scrollHeight;
+        if(wasAtBottom) container.scrollTop = container.scrollHeight;
     } catch(e) {}
 }
 
-async function envoyerMessage(event, roleStr) {
-    event.preventDefault();
+async function envoyerMessage() {
     let cours_id = document.getElementById("chat_cours_id").value;
     let input = document.getElementById("chat_input");
-    let msg = input.value;
-    
+    let msg = input.value.trim();
+    if(!msg) return;
     let user_id = localStorage.getItem("id_connecte");
     let nom_user = localStorage.getItem("nom_connecte");
-
+    input.value = "";
+    input.style.height = 'auto';
     try {
         let res = await fetch('api/chat.php', {
             method: 'POST',
@@ -459,10 +583,7 @@ async function envoyerMessage(event, roleStr) {
             body: JSON.stringify({ cours_id: cours_id, user_id: user_id, nom_user: nom_user, message: msg })
         });
         let data = await res.json();
-        if(data.success) {
-            input.value = "";
-            chargerMessages(cours_id);
-        }
+        if(data.success) chargerMessages(cours_id);
     } catch(e) {}
 }
 

@@ -1,3 +1,21 @@
+// ===== GESTION DU LAYOUT ERP =====
+function showSection(sectionId) {
+    document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+    let target = document.getElementById('section-' + sectionId);
+    if(target) target.classList.add('active');
+    
+    document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+    let navItem = document.getElementById('nav-' + sectionId);
+    if(navItem) navItem.classList.add('active');
+
+    let pageTitle = "Vue globale de la plateforme";
+    if(sectionId === 'modules') pageTitle = "Modules de Formation";
+    if(sectionId === 'enseignants') pageTitle = "Gestion des Enseignants";
+    if(sectionId === 'logs') pageTitle = "Journal d'activité système";
+    let headerTitle = document.getElementById("page_title");
+    if(headerTitle) headerTitle.textContent = pageTitle;
+}
+
 window.onload = function() {
     var role = localStorage.getItem("role_connecte");
     var nom = localStorage.getItem("nom_connecte");
@@ -100,45 +118,56 @@ document.addEventListener('click', e => {
     }
 });
 
-// ===== STATISTIQUES CHART.JS =====
-let myChartUsers = null;
-let myChartCours = null;
+// ===== STATISTIQUES CHART.JS ET DASHBOARD =====
+let graphiqueStats = null;
 
 async function chargerStatsGraphiques() {
     try {
         let res = await fetch('api/stats.php');
         let stats = await res.json();
 
-        // Graphe Utilisateurs
-        const ctxUsers = document.getElementById('chartUsers').getContext('2d');
-        if (myChartUsers) myChartUsers.destroy();
-        myChartUsers = new Chart(ctxUsers, {
-            type: 'pie',
-            data: {
-                labels: ['Étudiants', 'Enseignants', 'Promoteurs'],
-                datasets: [{
-                    data: [stats.total_etudiants, stats.total_enseignants, stats.total_promoteurs],
-                    backgroundColor: ['#007bff', '#28a745', '#ffc107']
-                }]
-            },
-            options: { responsive: true, plugins: { title: { display: true, text: 'Répartition des Utilisateurs' } } }
-        });
+        // MAJ des KPI (Cartes)
+        let totalUsers = (stats.total_etudiants || 0) + (stats.total_enseignants || 0);
+        let statU = document.getElementById("stat_users");
+        if(statU) statU.textContent = totalUsers;
 
-        // Graphe Cours
-        const ctxCours = document.getElementById('chartCours').getContext('2d');
-        if (myChartCours) myChartCours.destroy();
-        myChartCours = new Chart(ctxCours, {
+        let statM = document.getElementById("stat_modules");
+        if(statM) statM.textContent = stats.total_modules || 0;
+
+        let statC = document.getElementById("stat_cours");
+        if(statC) statC.textContent = stats.total_cours || 0;
+
+        let statL = document.getElementById("stat_lecons");
+        if(statL) statL.textContent = stats.total_lecons || 0;
+
+        // Un seul graphique combiné (Bar Chart)
+        const ctx = document.getElementById('graphiqueStats');
+        if(!ctx) return;
+        
+        if (graphiqueStats) graphiqueStats.destroy();
+        graphiqueStats = new Chart(ctx.getContext('2d'), {
             type: 'bar',
             data: {
-                labels: ['Modules', 'Cours', 'Leçons'],
+                labels: ['Modules', 'Cours', 'Leçons', 'Utilisateurs (Total)'],
                 datasets: [{
-                    label: 'Nombre',
-                    data: [stats.total_modules, stats.total_cours, stats.total_lecons],
-                    backgroundColor: ['#17a2b8', '#6c757d', '#6610f2']
+                    label: 'Volume',
+                    data: [stats.total_modules || 0, stats.total_cours || 0, stats.total_lecons || 0, totalUsers],
+                    backgroundColor: ['#1a56db', '#10b981', '#f59e0b', '#6366f1'],
+                    borderRadius: 4
                 }]
             },
-            options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { title: { display: true, text: 'Contenus' }, legend:{display:false} } }
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, border: { dash: [4, 4] } },
+                    x: { grid: { display: false } }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
         });
+
     } catch(e) {
         console.error("Erreur chargement stats:", e);
     }
@@ -149,34 +178,42 @@ async function chargerLogsActivite() {
     try {
         let res = await fetch('api/logs.php');
         let logs = await res.json();
-        let tbody = document.getElementById("logs_body");
+        let tbody = document.getElementById("logs_table");
+        if(!tbody) return;
+
         if (logs.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:10px;'>Aucune activité récente.</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:24px; color:var(--color-neutral-400);'>Aucune activité récente.</td></tr>";
             return;
         }
         
         let html = "";
         logs.forEach(l => {
-            html += `<tr style="border-bottom:1px solid #eee;">
-                <td style="padding:10px;">${new Date(l.date_action).toLocaleString('fr-FR')}</td>
-                <td style="padding:10px;"><strong>${l.nom_user}</strong></td>
-                <td style="padding:10px;"><span style="background:#e9ecef; padding:2px 5px; border-radius:3px; font-size:0.8rem;">${l.role_user}</span></td>
-                <td style="padding:10px; color:#0056b3;">${l.action}</td>
-                <td style="padding:10px;">${l.details || '-'}</td>
+            let roleBadge = l.role_user === 'promoteur' ? 'badge-danger' : (l.role_user === 'enseignant' ? 'badge-success' : 'badge-info');
+            
+            html += `<tr>
+                <td><span style="color:var(--color-neutral-500); font-size:0.8rem;">${new Date(l.date_action).toLocaleString('fr-FR')}</span></td>
+                <td style="font-weight:500;">${l.nom_user}</td>
+                <td><span class="badge ${roleBadge}">${l.role_user}</span></td>
+                <td style="color:var(--color-primary); font-weight:500;">${l.action}</td>
+                <td style="color:var(--color-neutral-600); font-size:0.8rem;">${l.details || '-'}</td>
             </tr>`;
         });
         tbody.innerHTML = html;
-    } catch(e) {}
+    } catch(e) {
+        console.error("Erreur chargement logs:", e);
+    }
 }
 
-// ===== IMPORT CSV =====
+// ===== IMPORT CSV ENSEIGNANTS =====
 async function importerCSV() {
-    let input = document.getElementById("file_csv");
-    let msg = document.getElementById("import_msg");
+    let input = document.getElementById("csv_file");
+    let msg = document.getElementById("import_result");
     
-    if (input.files.length === 0) {
-        msg.style.color = "red";
-        msg.textContent = "Veuillez sélectionner un fichier CSV.";
+    if (!input || input.files.length === 0) {
+        if(msg) {
+            msg.style.color = "red";
+            msg.textContent = "Veuillez sélectionner un fichier CSV.";
+        }
         return;
     }
     
@@ -185,8 +222,10 @@ async function importerCSV() {
     formData.append("fichier_csv", file);
     formData.append("role", "enseignant");
     
-    msg.style.color = "#0056b3";
-    msg.textContent = "Importation en cours...";
+    if(msg) {
+        msg.style.color = "var(--color-primary)";
+        msg.textContent = "Importation en cours...";
+    }
     
     try {
         let res = await fetch('api/import.php', {
@@ -196,48 +235,55 @@ async function importerCSV() {
         let data = await res.json();
         
         if (data.success) {
-            msg.style.color = "green";
-            msg.textContent = data.message;
+            if(msg) {
+                msg.style.color = "var(--color-success)";
+                msg.textContent = data.message;
+            }
             afficherEnseignants();
             chargerStatsGraphiques();
             chargerLogsActivite();
             logActivite('CSV_IMPORT', 'Import enseignant: ' + file.name);
         } else {
-            msg.style.color = "red";
-            msg.textContent = "Erreur: " + data.message;
+            if(msg) {
+                msg.style.color = "var(--color-danger)";
+                msg.textContent = "Erreur: " + data.message;
+            }
         }
     } catch(e) {
-        msg.style.color = "red";
-        msg.textContent = "Erreur de connexion.";
+        if(msg) {
+            msg.style.color = "var(--color-danger)";
+            msg.textContent = "Erreur de connexion.";
+        }
     }
 }
 
 // ===== GESTION DES AFFICHAGES EXISTANTS =====
 async function afficherEnseignants() {
-    var conteneur = document.getElementById("liste_enseignants");
-    if(!conteneur) return;
+    var tbody = document.getElementById("liste_enseignants");
+    if(!tbody) return;
 
     try {
         let res = await fetch('api/enseignants.php');
         let enseignants = await res.json();
         
-        conteneur.innerHTML = "";
+        tbody.innerHTML = "";
         
         if (enseignants.length === 0) {
-            conteneur.innerHTML = "<p style='grid-column:1/-1; text-align:center;'>Aucun enseignant inscrit.</p>";
+            tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:24px; color:var(--color-neutral-400);'>Aucun enseignant inscrit.</td></tr>";
             return;
         }
 
+        let html = "";
         enseignants.forEach(function(ens) {
-            var html = "<div class='carte-cours'>";
-            html += "<h3>" + ens.nom + "</h3>";
-            html += "<p><strong>Email :</strong> " + ens.email + "</p>";
-            html += "<p style='color: #0056b3; font-weight: bold;'>Enseignant</p>";
-            html += "</div>";
-            conteneur.innerHTML += html;
+            html += `<tr>
+                <td style="font-weight:500;">${ens.nom}</td>
+                <td>${ens.email}</td>
+                <td style="color:var(--color-neutral-500); font-size:0.85rem;">${ens.date_creation || '-'}</td>
+            </tr>`;
         });
+        tbody.innerHTML = html;
     } catch(err) {
-        conteneur.innerHTML = "<p style='grid-column:1/-1; text-align:center;'>Erreur de chargement.</p>";
+        tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:24px; color:var(--color-danger);'>Erreur de chargement.</td></tr>";
     }
 }
 

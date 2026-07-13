@@ -3,115 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FONDA WORKPLACE - Espace Promoteur</title>
-    <!-- Projet etudiant de ONANA GREGOIRE LEGRAND (24G2060) -->
+    <title>FONDA WORKPLACE — Espace Promoteur</title>
+    <!-- Projet de ONANA GREGOIRE LEGRAND (24G2060) -->
     <link rel="stylesheet" href="assets/css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="navbar">
-        <h1>FONDA WORKPLACE</h1>
-        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+
+<div class="app-layout">
+
+    <!-- ======= SIDEBAR ======= -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <span class="logo-name">Fonda Workplace</span>
+            <span class="logo-sub">Espace Promoteur</span>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section-label">Principal</div>
+            <a onclick="showSection('accueil')" id="nav-accueil" class="active">
+                <span class="nav-dot"></span><span>Tableau de bord</span>
+            </a>
+            <a onclick="showSection('modules')" id="nav-modules">
+                <span class="nav-dot"></span><span>Gérer les Modules</span>
+            </a>
+            <a onclick="showSection('enseignants')" id="nav-enseignants">
+                <span class="nav-dot"></span><span>Enseignants</span>
+            </a>
+            <a onclick="showSection('logs')" id="nav-logs">
+                <span class="nav-dot"></span><span>Logs d'activité</span>
+            </a>
+            <div class="sidebar-section-label">Compte</div>
+            <a href="profil.html">
+                <span class="nav-dot"></span><span>Mon Profil</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div id="sidebar_user" style="font-weight:600; color:rgba(255,255,255,0.7);"></div>
+            <div style="margin-top:3px; font-size:0.68rem;">Promoteur / Admin</div>
+        </div>
+    </aside>
+
+    <!-- ======= HEADER ======= -->
+    <header class="app-header">
+        <div class="app-header-title" id="page_title">Tableau de bord</div>
+        <div class="app-header-right">
             <div style="position:relative;">
-                <input type="text" id="input_recherche" placeholder="Rechercher..." oninput="rechercheGlobale(this.value)" style="padding: 6px 12px; border-radius: 20px; border: none; font-size: 0.9rem; width: 200px;">
-                <div id="dropdown_recherche" style="display:none; position:absolute; top:36px; left:0; width:300px; background:white; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.15); z-index:1000; max-height:250px; overflow-y:auto;"></div>
+                <input type="text" id="input_recherche" class="header-search" placeholder="Rechercher..." oninput="rechercheGlobale(this.value)">
+                <div id="dropdown_recherche" style="display:none; position:absolute; top:38px; right:0; width:300px; background:white; border-radius:var(--radius-md); box-shadow:var(--shadow-lg); z-index:1000; max-height:260px; overflow-y:auto; border:1px solid var(--color-neutral-200);"></div>
             </div>
             <div style="position:relative;">
-                <button onclick="toggleNotifications()" style="background:none;border:none;cursor:pointer;font-size:1.3rem;position:relative;" title="Notifications">
-                    Notifs <span id="badge_notif" style="display:none;position:absolute;top:-5px;right:-5px;background:red;color:white;border-radius:50%;width:18px;height:18px;font-size:0.65rem;line-height:18px;text-align:center;">0</span>
+                <button class="notif-btn" onclick="toggleNotifications()">
+                    Notifs&nbsp;<span id="badge_notif" style="display:none; position:absolute; top:-5px; right:-5px; background:var(--color-danger); color:white; border-radius:50%; width:16px; height:16px; font-size:0.58rem; line-height:16px; text-align:center; font-weight:700;">0</span>
                 </button>
-                <div id="dropdown_notif" style="display:none;position:absolute;top:40px;right:0;width:300px;background:white;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,0.15);z-index:1000;padding:10px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong>Notifications</strong><button onclick="marquerToutLu()" style="font-size:0.75rem;background:none;border:none;color:#0056b3;cursor:pointer;">Tout lire</button></div>
-                    <div id="liste_notif">Chargement...</div>
+                <div id="dropdown_notif" style="display:none; position:absolute; top:42px; right:0; width:300px; background:white; border-radius:var(--radius-md); box-shadow:var(--shadow-lg); z-index:1000; padding:12px; border:1px solid var(--color-neutral-200);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <strong style="font-size:0.85rem;">Notifications</strong>
+                        <button onclick="marquerToutLu()" style="font-size:0.75rem; background:none; border:none; color:var(--color-primary); cursor:pointer; font-family:var(--font-base);">Tout lire</button>
+                    </div>
+                    <div id="liste_notif" style="max-height:200px; overflow-y:auto;">Chargement...</div>
                 </div>
             </div>
-            <a href="profil.html" style="color:white;font-size:1rem;text-decoration:none;" title="Mon profil">Profil</a>
-            <span id="nom_utilisateur" style="color: white; font-weight: bold;"></span>
+            <span class="app-header-user" id="nom_utilisateur"></span>
             <button onclick="deconnexion()" class="btn-quitter">Déconnexion</button>
         </div>
-    </div>
+    </header>
 
-    <div class="contenu-principal">
-        
-        <!-- Statistiques et Graphiques -->
-        <h2 style="margin-top: 20px;">Statistiques Globales</h2>
-        <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:30px;">
-            <div style="flex:1; min-width:300px; background:white; padding:20px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
-                <canvas id="chartUsers"></canvas>
-            </div>
-            <div style="flex:1; min-width:300px; background:white; padding:20px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
-                <canvas id="chartCours"></canvas>
-            </div>
-        </div>
+    <!-- ======= MAIN CONTENT ======= -->
+    <main class="app-main">
 
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h2>Liste des Enseignants</h2>
-            <!-- Import CSV -->
-            <div style="background:#f8f9fa; padding:10px; border-radius:5px; border:1px solid #ddd;">
-                <label style="font-size:0.9rem; font-weight:bold;">Importer des enseignants (CSV) :</label><br>
-                <input type="file" id="file_csv" accept=".csv" style="font-size:0.85rem; margin-top:5px;">
-                <button onclick="importerCSV()" style="background:#28a745; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">Importer</button>
-                <div id="import_msg" style="font-size:0.85rem; margin-top:5px;"></div>
-            </div>
-        </div>
-        <p style="color: var(--text-muted);">Voici les enseignants inscrits sur la plateforme.</p>
-        <div class="liste-cours" id="liste_enseignants">
-            <div style="text-align:center; grid-column: 1 / -1; color: var(--text-muted);">
-                Chargement des enseignants...
-            </div>
-        </div>
+        <!-- Section : Tableau de bord -->
+        <section id="section-accueil" class="page-section active">
+            <p class="page-title">Vue globale de la plateforme</p>
+            <p class="page-subtitle">Statistiques d'utilisation et métriques clés.</p>
 
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 40px;">
-            <h2>Gestion des Modules</h2>
-            <button class="btn-cours" style="background-color:#28a745;" onclick="ouvrirAjoutModule()">+ Créer un module</button>
-        </div>
-        <div class="liste-cours" id="mes_cours">
-            <div style="text-align:center; grid-column: 1 / -1; color: var(--text-muted);">
-                Chargement des modules...
-            </div>
-        </div>
-
-        <!-- Logs d'Activité -->
-        <h2 style="margin-top: 40px;">Logs d'Activité</h2>
-        <div style="background:white; padding:15px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.05); overflow-x:auto;">
-            <table style="width:100%; border-collapse: collapse; font-size:0.9rem;">
-                <thead style="background:#f4f4f4; text-align:left;">
-                    <tr>
-                        <th style="padding:10px; border-bottom:1px solid #ddd;">Date</th>
-                        <th style="padding:10px; border-bottom:1px solid #ddd;">Utilisateur</th>
-                        <th style="padding:10px; border-bottom:1px solid #ddd;">Rôle</th>
-                        <th style="padding:10px; border-bottom:1px solid #ddd;">Action</th>
-                        <th style="padding:10px; border-bottom:1px solid #ddd;">Détails</th>
-                    </tr>
-                </thead>
-                <tbody id="logs_body">
-                    <tr><td colspan="5" style="text-align:center; padding:10px;">Chargement des logs...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Modal pour ajouter un module -->
-    <div id="module_modal" class="modal">
-        <div class="modal-content" style="width: 80%; max-width: 500px;">
-            <span class="close-btn" onclick="fermerModal('module_modal')">&times;</span>
-            <h2>Créer un nouveau module</h2>
-            <form id="form_ajout_module" onsubmit="ajouterModule(event)">
-                <div class="champ">
-                    <label>Titre du module :</label>
-                    <input type="text" id="mod_titre" required>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-card-label">Utilisateurs inscrits</div>
+                    <div class="stat-card-value" id="stat_users">—</div>
+                    <div class="stat-card-sub">Étudiants et Enseignants</div>
                 </div>
-                <div class="champ">
-                    <label>Description :</label>
-                    <textarea id="mod_description" required rows="3"></textarea>
+                <div class="stat-card">
+                    <div class="stat-card-label">Modules de formation</div>
+                    <div class="stat-card-value" id="stat_modules">—</div>
+                    <div class="stat-card-sub">Créés par les promoteurs</div>
                 </div>
-                <button type="submit" style="background:#0056b3; color:white; border:none; padding:10px 15px; border-radius:5px; cursor:pointer;">Ajouter le module</button>
-                <p id="mod_msg" style="margin-top: 10px;"></p>
-            </form>
-        </div>
-    </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Cours publiés</div>
+                    <div class="stat-card-value" id="stat_cours">—</div>
+                    <div class="stat-card-sub">Disponibles dans les modules</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Leçons actives</div>
+                    <div class="stat-card-value" id="stat_lecons">—</div>
+                    <div class="stat-card-sub">Contenus de formation</div>
+                </div>
+            </div>
 
-    <script src="assets/js/auth.js"></script>
-    <script src="assets/js/promoteur.js"></script>
+            <!-- Graphique Chart.js -->
+            <div style="background:white; padding:24px; border-radius:var(--radius-md); border:1px solid var(--color-neutral-200); box-shadow:var(--shadow-sm); max-width:800px;">
+                <h3 style="margin-top:0; font-size:1.05rem; margin-bottom:16px;">Répartition des contenus</h3>
+                <canvas id="graphiqueStats"></canvas>
+            </div>
+        </section>
+
+        <!-- Section : Modules -->
+        <section id="section-modules" class="page-section">
+            <div class="section-header">
+                <div>
+                    <p class="page-title" style="margin-bottom:4px;">Modules de Formation</p>
+                    <p class="page-subtitle" style="margin-bottom:0;">Créez et gérez les grands blocs de formation.</p>
+                </div>
+                <button class="btn-cours" style="width:auto; margin-top:0;" onclick="document.getElementById('ajout_module_modal').style.display='block'">+ Créer un Module</button>
+            </div>
+            <div class="liste-cours" id="liste_modules">
+                <div style="grid-column:1/-1; text-align:center; padding:30px; color:var(--color-neutral-400);">Chargement des modules...</div>
+            </div>
+        </section>
+
+        <!-- Section : Enseignants -->
+        <section id="section-enseignants" class="page-section">
+            <div class="section-header">
+                <div>
+                    <p class="page-title" style="margin-bottom:4px;">Gestion des Enseignants</p>
+                    <p class="page-subtitle" style="margin-bottom:0;">Invitez des enseignants en masse via import CSV.</p>
+                </div>
+                <button class="btn-cours" style="width:auto; margin-top:0; background:var(--color-success);" onclick="document.getElementById('import_csv_modal').style.display='block'">Importer via CSV</button>
+            </div>
+            
+            <div class="table-card">
+                <table class="content-table">
+                    <thead>
+                        <tr>
+                            <th>Nom complet</th>
+                            <th>Adresse e-mail</th>
+                            <th>Date de création</th>
+                        </tr>
+                    </thead>
+                    <tbody id="liste_enseignants">
+                        <tr><td colspan="3" style="text-align:center; padding:24px; color:var(--color-neutral-400);">Chargement...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section : Logs -->
+        <section id="section-logs" class="page-section">
+            <p class="page-title">Journal d'activité système</p>
+            <p class="page-subtitle">Trace détaillée des actions effectuées sur la plateforme.</p>
+            <div class="table-card">
+                <table class="content-table">
+                    <thead>
+                        <tr>
+                            <th>Date / Heure</th>
+                            <th>Utilisateur</th>
+                            <th>Rôle</th>
+                            <th>Action</th>
+                            <th>Détails</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs_table">
+                        <tr><td colspan="5" style="text-align:center; padding:24px; color:var(--color-neutral-400);">Chargement...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- ======= MODALES ======= -->
+
+<!-- Modal : Ajouter un module -->
+<div id="ajout_module_modal" class="modal">
+    <div class="modal-content" style="width:80%; max-width:500px;">
+        <span class="close-btn" onclick="fermerModal('ajout_module_modal')">&times;</span>
+        <h2 style="margin-bottom:20px;">Créer un Module</h2>
+        <form id="form_ajout_module" onsubmit="ajouterModule(event)">
+            <div class="champ">
+                <label>Titre du module :</label>
+                <input type="text" id="module_titre" required>
+            </div>
+            <div class="champ">
+                <label>Description :</label>
+                <textarea id="module_description" rows="3" required></textarea>
+            </div>
+            <button type="submit">Créer le module</button>
+            <p id="module_msg" style="margin-top:10px;"></p>
+        </form>
+    </div>
+</div>
+
+<!-- Modal : Import CSV -->
+<div id="import_csv_modal" class="modal">
+    <div class="modal-content" style="width:80%; max-width:540px;">
+        <span class="close-btn" onclick="fermerModal('import_csv_modal')">&times;</span>
+        <h2 style="margin-bottom:12px;">Importation Enseignants (CSV)</h2>
+        <p style="font-size:0.85rem; color:var(--color-neutral-600); margin-bottom:16px;">
+            Le fichier CSV doit avoir les colonnes : <code>nom, email, mot_de_passe</code>
+        </p>
+        <div style="background:var(--color-neutral-50); border:1px dashed var(--color-neutral-400); padding:24px; text-align:center; border-radius:var(--radius-sm); margin-bottom:16px;">
+            <input type="file" id="csv_file" accept=".csv" style="margin:0 auto;">
+        </div>
+        <button class="btn-cours" onclick="importerCSV()" style="margin-top:0;">Lancer l'importation</button>
+        <div id="import_result" style="margin-top:16px; font-size:0.875rem;"></div>
+    </div>
+</div>
+
+<!-- Inclusion de Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/promoteur.js"></script>
 </body>
 </html>
