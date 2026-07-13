@@ -6,11 +6,10 @@ echo   LANCEMENT DU SERVEUR LOCAL FONDA WORKPLACE
 echo ===================================================
 echo.
 
-:: Recherche automatique de l'adresse IP locale
-for /f "tokens=2 delims=:" %%F in ('ipconfig ^| findstr /c:"IPv4"') do set IP=%%F
-if defined IP (
-    set IP=%IP: =%
-) else (
+:: Recherche automatique de l'adresse IP locale via PowerShell (plus robuste)
+for /f "delims=" %%I in ('powershell -command "(Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch 'Loopback|Pseudo' -and ($_.IPAddress -like '192.168.*' -or $_.IPAddress -like '10.*' -or $_.IPAddress -like '172.*') }).IPAddress | Select-Object -First 1"') do set "IP=%%I"
+
+if not defined IP (
     set IP=localhost
 )
 
