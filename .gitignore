@@ -1,0 +1,14 @@
+# PHP portable (trop lourd pour GitHub)
+php/
+
+# Fichier de seeding (usage local uniquement)
+seed.php
+
+# Base de données SQLite locale
+api/config/lms_db.sqlite
+
+# Uploads locaux
+assets/uploads/
+
+# Dossier Node.js (si applicable)
+node_modules/
