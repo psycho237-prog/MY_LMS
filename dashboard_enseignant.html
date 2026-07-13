@@ -162,18 +162,25 @@
             </div>
             <div class="champ">
                 <label>Type de contenu :</label>
-                <select id="lecon_type" onchange="toggleChampLecon()">
+                <select id="lecon_type">
                     <option value="pdf">Document PDF</option>
-                    <option value="video">Vidéo (URL)</option>
+                    <option value="video">Vidéo</option>
                 </select>
             </div>
-            <div id="champ_upload" class="champ">
-                <label>Fichier PDF :</label>
-                <input type="file" id="lecon_fichier" accept=".pdf">
+            <div class="champ">
+                <label>Source :</label>
+                <select id="lecon_source" onchange="changerSourceLecon()">
+                    <option value="fichier">Fichier local (upload)</option>
+                    <option value="url">URL externe</option>
+                </select>
+            </div>
+            <div id="champ_fichier" class="champ">
+                <label>Fichier :</label>
+                <input type="file" id="lecon_fichier" accept=".pdf,.mp4,.mov,.avi">
             </div>
             <div id="champ_url" class="champ" style="display:none;">
-                <label>URL de la vidéo :</label>
-                <input type="url" id="lecon_url_video" placeholder="https://...">
+                <label>URL (vidéo ou PDF en ligne) :</label>
+                <input type="url" id="lecon_url" placeholder="https://...">
             </div>
             <button type="submit">Ajouter la leçon</button>
             <p id="lecon_msg" style="margin-top:10px;"></p>
@@ -181,27 +188,47 @@
     </div>
 </div>
 
-<!-- Modal : Créer un Quiz -->
+<!-- Modal : Créer / Modifier un Quiz -->
 <div id="quiz_modal" class="modal">
-    <div class="modal-content" style="width:85%; max-width:720px;">
+    <div class="modal-content" style="width:90%; max-width:740px; max-height:90vh; overflow-y:auto;">
         <span class="close-btn" onclick="fermerModal('quiz_modal')">&times;</span>
-        <h2 id="quiz_modal_titre" style="margin-bottom:16px;">Créer un Quiz</h2>
+        <h2 id="quiz_titre_modal" style="margin-bottom:16px;">Gérer le Quiz</h2>
         <input type="hidden" id="quiz_lecon_id">
-        <div style="display:flex; gap:16px; margin-bottom:16px;">
-            <div class="champ" style="flex:1; margin-bottom:0;">
-                <label>Durée (minutes) :</label>
-                <input type="number" id="quiz_duree_minutes" value="10" min="1" max="120">
+
+        <form id="form_ajout_quiz" onsubmit="ajouterQuiz(event)">
+            <div style="display:flex; gap:16px; margin-bottom:16px; flex-wrap:wrap;">
+                <div class="champ" style="flex:2; min-width:180px; margin-bottom:0;">
+                    <label>Titre du quiz :</label>
+                    <input type="text" id="quiz_titre" placeholder="Ex: Quiz chapitre 1" required>
+                </div>
+                <div class="champ" style="flex:1; min-width:100px; margin-bottom:0;">
+                    <label>Durée (min) :</label>
+                    <input type="number" id="quiz_duree" value="10" min="1" max="120">
+                </div>
+                <div class="champ" style="flex:1; min-width:100px; margin-bottom:0;">
+                    <label>Score minimum (%) :</label>
+                    <input type="number" id="quiz_seuil" value="50" min="0" max="100">
+                </div>
             </div>
-            <div class="champ" style="flex:1; margin-bottom:0;">
-                <label>Score minimum (%) :</label>
-                <input type="number" id="quiz_score_minimum" value="50" min="0" max="100">
+
+            <hr style="margin:12px 0; border:none; border-top:1px solid var(--color-neutral-200);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <strong>Questions</strong>
+                <button type="button" onclick="ajouterQuestionBuilder()"
+                    style="background:var(--color-neutral-600); color:white; border:none; padding:7px 14px; border-radius:var(--radius-sm); cursor:pointer; font-family:var(--font-base); font-size:0.85rem;">
+                    + Ajouter une question
+                </button>
             </div>
-        </div>
-        <div id="liste_questions"></div>
-        <button onclick="ajouterQuestion()" style="background:var(--color-neutral-600); color:white; border:none; padding:8px 16px; border-radius:var(--radius-sm); cursor:pointer; font-family:var(--font-base); font-size:0.875rem; margin-top:8px;">+ Ajouter une question</button>
-        <hr style="margin:16px 0; border:none; border-top:1px solid var(--color-neutral-200);">
-        <button onclick="sauvegarderQuiz()" style="background:var(--color-success); color:white; border:none; padding:10px 20px; border-radius:var(--radius-sm); cursor:pointer; font-weight:600; font-family:var(--font-base); width:100%;">Sauvegarder le Quiz</button>
-        <p id="quiz_msg" style="margin-top:10px; text-align:center;"></p>
+
+            <div id="quiz_builder"></div>
+
+            <hr style="margin:16px 0; border:none; border-top:1px solid var(--color-neutral-200);">
+            <button type="submit" id="btn_submit_quiz"
+                style="background:var(--color-success); color:white; border:none; padding:10px 20px; border-radius:var(--radius-sm); cursor:pointer; font-weight:600; font-family:var(--font-base); width:100%;">
+                Ajouter le quiz
+            </button>
+            <p id="quiz_msg" style="margin-top:10px; text-align:center;"></p>
+        </form>
     </div>
 </div>
 
