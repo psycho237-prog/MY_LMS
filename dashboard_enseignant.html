@@ -52,8 +52,19 @@
                         </select>
                     </div>
                     <div class="champ">
+                        <label>Source :</label>
+                        <select id="lecon_source" onchange="changerSourceLecon()">
+                            <option value="fichier">Upload Fichier</option>
+                            <option value="url">Lien URL (ex: YouTube)</option>
+                        </select>
+                    </div>
+                    <div class="champ" id="champ_fichier">
                         <label>Fichier :</label>
-                        <input type="file" id="lecon_fichier" required accept=".pdf,.doc,.docx,.mp4">
+                        <input type="file" id="lecon_fichier" accept=".pdf,.doc,.docx,.mp4">
+                    </div>
+                    <div class="champ" id="champ_url" style="display:none;">
+                        <label>Lien URL :</label>
+                        <input type="url" id="lecon_url" placeholder="https://...">
                     </div>
                     <button type="submit">Ajouter</button>
                     <p id="lecon_msg"></p>
@@ -127,11 +138,13 @@
                     <input type="text" id="quiz_titre" required>
                 </div>
                 <div class="champ">
-                    <label>Questions (Format JSON) :</label>
-                    <textarea id="quiz_questions" required rows="6" placeholder='[{"q":"Quelle est la capitale ?","options":["Paris","Londres"],"reponse":"Paris"}]'></textarea>
-                    <small style="color: var(--text-muted);">Entrez les questions sous forme de tableau JSON valide.</small>
+                    <label>Questions :</label>
+                    <div id="quiz_builder" style="border: 1px solid #ccc; padding: 10px; background: #f9f9f9; max-height: 400px; overflow-y: auto;">
+                        <!-- Questions ajoutées dynamiquement -->
+                    </div>
+                    <button type="button" onclick="ajouterQuestionBuilder()" style="margin-top:10px; background:#28a745; color:white; border:none; padding:8px 12px; cursor:pointer; border-radius:3px;">+ Ajouter une question</button>
                 </div>
-                <button type="submit">Ajouter le quiz</button>
+                <button type="submit" id="btn_submit_quiz" style="margin-top:20px;">Ajouter le quiz</button>
                 <p id="quiz_msg"></p>
             </form>
         </div>

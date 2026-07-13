@@ -89,8 +89,19 @@ async function chargerLeconsList(id) {
     }
 }
 
+function changerSourceLecon() {
+    let source = document.getElementById("lecon_source").value;
+    if (source === 'fichier') {
+        document.getElementById("champ_fichier").style.display = 'block';
+        document.getElementById("champ_url").style.display = 'none';
+    } else {
+        document.getElementById("champ_fichier").style.display = 'none';
+        document.getElementById("champ_url").style.display = 'block';
+    }
+}
+
 /**
- * Envoie un fichier sur Cloudinary et sauvegarde la leçon dans la base de données.
+ * Envoie un fichier sur Cloudinary et sauvegarde la leçon dans la base de données, ou sauvegarde simplement l'URL.
  */
 async function ajouterLecon(event) {
     event.preventDefault();
@@ -98,8 +109,41 @@ async function ajouterLecon(event) {
     let cours_id = document.getElementById("cours_id_actif").value;
     let titre = document.getElementById("lecon_titre").value;
     let type = document.getElementById("lecon_type").value;
+    let source = document.getElementById("lecon_source").value;
     let fichierInput = document.getElementById("lecon_fichier");
     let msg = document.getElementById("lecon_msg");
+
+    if (source === 'url') {
+        let url_contenu = document.getElementById("lecon_url").value;
+        if (!url_contenu) {
+            msg.style.color = "red";
+            msg.textContent = "Veuillez entrer une URL valide.";
+            return;
+        }
+        msg.style.color = "#0056b3";
+        msg.textContent = "Ajout de la leçon...";
+        try {
+            let res = await fetch('api/lecons.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ cours_id: cours_id, titre: titre, type: type, url_contenu: url_contenu, public_id: null, resource_type: type })
+            });
+            let data = await res.json();
+            if (data.success) {
+                msg.style.color = "green";
+                msg.textContent = "Leçon ajoutée !";
+                document.getElementById("form_ajout_lecon").reset();
+                chargerLeconsList(cours_id);
+            } else {
+                msg.style.color = "red";
+                msg.textContent = "Erreur : " + data.message;
+            }
+        } catch(err) {
+            msg.style.color = "red";
+            msg.textContent = "Erreur serveur.";
+        }
+        return;
+    }
 
     if(fichierInput.files.length === 0) {
         msg.style.color = "red";
@@ -117,26 +161,43 @@ async function ajouterLecon(event) {
     let formData = new FormData();
     formData.append("file", fichierInput.files[0]);
     formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-    // Optionnel: vous pouvez spécifier un dossier dans Cloudinary
-    // formData.append("folder", "lms_uploads");
 
     try {
-        let uploadRes = await fetch(CLOUDINARY_URL, { 
-            method: 'POST', 
-            body: formData 
-        });
+        let fileUrl = "";
+        let publicId = "";
+        let resourceType = "";
         
-        if (!uploadRes.ok) {
-            let errorData = await uploadRes.json();
-            msg.style.color = "red";
-            msg.textContent = "Erreur Cloudinary: " + (errorData.error ? errorData.error.message : "Échec de l'upload");
-            return;
+        try {
+            let uploadRes = await fetch(CLOUDINARY_URL, { 
+                method: 'POST', 
+                body: formData 
+            });
+            
+            if (!uploadRes.ok) {
+                throw new Error("Erreur Cloudinary");
+            }
+            
+            let uploadData = await uploadRes.json();
+            fileUrl = uploadData.secure_url;
+            publicId = uploadData.public_id;
+            resourceType = uploadData.resource_type;
+        } catch(cloudErr) {
+            console.log("Cloudinary indisponible, tentative de sauvegarde locale...");
+            msg.textContent = "Sauvegarde locale (Mode hors ligne)...";
+            let localRes = await fetch('api/upload.php', {
+                method: 'POST',
+                body: formData
+            });
+            let localData = await localRes.json();
+            if(localData.success) {
+                fileUrl = localData.url;
+                resourceType = type;
+            } else {
+                msg.style.color = "red";
+                msg.textContent = "Erreur: Impossible de sauvegarder le fichier.";
+                return;
+            }
         }
-
-        let uploadData = await uploadRes.json();
-        let fileUrl = uploadData.secure_url; // Cloudinary renvoie l'URL sécurisée
-        let publicId = uploadData.public_id;
-        let resourceType = uploadData.resource_type;
 
         let res = await fetch('api/lecons.php', {
             method: 'POST',
@@ -183,27 +244,105 @@ async function supprimerLecon(lecon_id, cours_id) {
     }
 }
 
-function ouvrirQuiz(lecon_id, lecon_titre) {
+let quizQuestionCount = 0;
+
+async function ouvrirQuiz(lecon_id, lecon_titre) {
     document.getElementById("quiz_lecon_id").value = lecon_id;
-    document.getElementById("quiz_titre_modal").textContent = "Ajouter un quiz : " + lecon_titre;
-    document.getElementById("quiz_msg").textContent = "";
+    document.getElementById("quiz_titre_modal").textContent = "Gérer le quiz : " + lecon_titre;
+    document.getElementById("quiz_msg").textContent = "Chargement...";
+    document.getElementById("quiz_builder").innerHTML = "";
+    quizQuestionCount = 0;
     document.getElementById("form_ajout_quiz").reset();
     document.getElementById("quiz_modal").style.display = "block";
+
+    try {
+        let res = await fetch('api/evaluations.php?lecon_id=' + lecon_id);
+        let evals = await res.json();
+        
+        document.getElementById("quiz_msg").textContent = "";
+
+        if (evals.length > 0) {
+            let quiz = evals[0];
+            document.getElementById("quiz_titre").value = quiz.titre;
+            let questions = typeof quiz.questions === 'string' ? JSON.parse(quiz.questions) : quiz.questions;
+            questions.forEach(q => ajouterQuestionBuilder(q));
+            document.getElementById("btn_submit_quiz").textContent = "Modifier le quiz";
+        } else {
+            document.getElementById("btn_submit_quiz").textContent = "Ajouter le quiz";
+            ajouterQuestionBuilder(); // Add one empty question by default
+        }
+    } catch (e) {
+        document.getElementById("quiz_msg").textContent = "Erreur de chargement du quiz.";
+    }
+}
+
+function ajouterQuestionBuilder(qData = null) {
+    quizQuestionCount++;
+    let index = quizQuestionCount;
+    let div = document.createElement("div");
+    div.className = "question-item";
+    div.id = "question_item_" + index;
+    div.style.marginBottom = "15px";
+    div.style.padding = "10px";
+    div.style.border = "1px solid #ddd";
+    div.style.background = "#fff";
+    
+    let qText = qData ? qData.q : "";
+    let opt1 = qData && qData.options[0] ? qData.options[0] : "";
+    let opt2 = qData && qData.options[1] ? qData.options[1] : "";
+    let opt3 = qData && qData.options[2] ? qData.options[2] : "";
+    let rep = qData ? qData.reponse : "";
+
+    div.innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+            <strong>Question ${index}</strong>
+            <button type="button" onclick="this.parentElement.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer;">&times; Supprimer</button>
+        </div>
+        <input type="text" class="q-text" placeholder="Entrez la question..." value="${qText.replace(/"/g, '&quot;')}" style="width:100%; margin-bottom:5px;" required>
+        <div style="margin-left: 10px;">
+            <input type="text" class="q-opt" placeholder="Option 1" value="${opt1.replace(/"/g, '&quot;')}" style="width:100%; margin-bottom:3px;" required>
+            <input type="text" class="q-opt" placeholder="Option 2" value="${opt2.replace(/"/g, '&quot;')}" style="width:100%; margin-bottom:3px;" required>
+            <input type="text" class="q-opt" placeholder="Option 3 (Optionnel)" value="${opt3.replace(/"/g, '&quot;')}" style="width:100%; margin-bottom:3px;">
+            <input type="text" class="q-rep" placeholder="Bonne réponse (exactement comme l'option)" value="${rep.replace(/"/g, '&quot;')}" style="width:100%; margin-bottom:3px; border-color: #28a745;" required>
+        </div>
+    `;
+    document.getElementById("quiz_builder").appendChild(div);
 }
 
 async function ajouterQuiz(event) {
     event.preventDefault();
     let lecon_id = document.getElementById("quiz_lecon_id").value;
     let titre = document.getElementById("quiz_titre").value;
-    let questionsStr = document.getElementById("quiz_questions").value;
     let msg = document.getElementById("quiz_msg");
     
-    let questionsObj;
-    try {
-        questionsObj = JSON.parse(questionsStr);
-    } catch(e) {
+    let questionsItems = document.querySelectorAll(".question-item");
+    if (questionsItems.length === 0) {
         msg.style.color = "red";
-        msg.textContent = "Erreur: Le format JSON des questions est invalide.";
+        msg.textContent = "Veuillez ajouter au moins une question.";
+        return;
+    }
+
+    let questionsObj = [];
+    let valid = true;
+    questionsItems.forEach(item => {
+        let text = item.querySelector(".q-text").value;
+        let opts = Array.from(item.querySelectorAll(".q-opt")).map(i => i.value).filter(v => v.trim() !== "");
+        let rep = item.querySelector(".q-rep").value;
+        
+        if (!opts.includes(rep)) {
+            valid = false;
+        }
+        
+        questionsObj.push({
+            q: text,
+            options: opts,
+            reponse: rep
+        });
+    });
+
+    if (!valid) {
+        msg.style.color = "red";
+        msg.textContent = "Erreur: La bonne réponse doit correspondre exactement à l'une des options proposées pour chaque question.";
         return;
     }
 
@@ -217,7 +356,7 @@ async function ajouterQuiz(event) {
 
         if (data.success) {
             msg.style.color = "green";
-            msg.textContent = "Quiz ajouté avec succès !";
+            msg.textContent = "Quiz sauvegardé avec succès !";
             setTimeout(() => { fermerModal('quiz_modal'); }, 1500);
         } else {
             msg.style.color = "red";
