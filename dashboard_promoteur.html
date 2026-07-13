@@ -61,7 +61,10 @@
             </div>
         </div>
 
-        <h2 style="margin-top: 40px;">Gestion des Modules</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 40px;">
+            <h2>Gestion des Modules</h2>
+            <button class="btn-cours" style="background-color:#28a745;" onclick="ouvrirAjoutModule()">+ Créer un module</button>
+        </div>
         <div class="liste-cours" id="mes_cours">
             <div style="text-align:center; grid-column: 1 / -1; color: var(--text-muted);">
                 Chargement des modules...
@@ -85,6 +88,26 @@
                     <tr><td colspan="5" style="text-align:center; padding:10px;">Chargement des logs...</td></tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- Modal pour ajouter un module -->
+    <div id="module_modal" class="modal">
+        <div class="modal-content" style="width: 80%; max-width: 500px;">
+            <span class="close-btn" onclick="fermerModal('module_modal')">&times;</span>
+            <h2>Créer un nouveau module</h2>
+            <form id="form_ajout_module" onsubmit="ajouterModule(event)">
+                <div class="champ">
+                    <label>Titre du module :</label>
+                    <input type="text" id="mod_titre" required>
+                </div>
+                <div class="champ">
+                    <label>Description :</label>
+                    <textarea id="mod_description" required rows="3"></textarea>
+                </div>
+                <button type="submit" style="background:#0056b3; color:white; border:none; padding:10px 15px; border-radius:5px; cursor:pointer;">Ajouter le module</button>
+                <p id="mod_msg" style="margin-top: 10px;"></p>
+            </form>
         </div>
     </div>
 

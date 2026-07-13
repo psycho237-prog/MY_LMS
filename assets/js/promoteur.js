@@ -273,3 +273,49 @@ function voirStats(id) {
     alert("Les statistiques détaillées du module n°" + id + " seront bientôt disponibles.");
     logActivite("STATS_VIEW", "Vue des stats du module " + id);
 }
+
+function fermerModal(modalId) {
+    document.getElementById(modalId).style.display = "none";
+}
+
+function ouvrirAjoutModule() {
+    document.getElementById("mod_titre").value = "";
+    document.getElementById("mod_description").value = "";
+    document.getElementById("mod_msg").textContent = "";
+    document.getElementById("module_modal").style.display = "block";
+}
+
+async function ajouterModule(event) {
+    event.preventDefault();
+    let titre = document.getElementById("mod_titre").value.trim();
+    let desc = document.getElementById("mod_description").value.trim();
+    let msg = document.getElementById("mod_msg");
+    let promoteur_id = localStorage.getItem("id_connecte");
+    
+    msg.style.color = "#0056b3";
+    msg.textContent = "Création en cours...";
+    
+    try {
+        let res = await fetch('api/modules.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ titre: titre, description: desc, promoteur_id: promoteur_id })
+        });
+        let data = await res.json();
+        
+        if (data.success) {
+            msg.style.color = "green";
+            msg.textContent = "Module créé avec succès !";
+            afficherCours();
+            chargerStatsGraphiques();
+            logActivite('MODULE_CREATE', 'Création du module: ' + titre);
+            setTimeout(() => { fermerModal('module_modal'); }, 1500);
+        } else {
+            msg.style.color = "red";
+            msg.textContent = data.message || "Erreur lors de la création.";
+        }
+    } catch (e) {
+        msg.style.color = "red";
+        msg.textContent = "Erreur de connexion serveur.";
+    }
+}
