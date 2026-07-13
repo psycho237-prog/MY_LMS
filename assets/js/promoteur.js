@@ -82,7 +82,7 @@ function rechercheGlobale(q) {
             let results = await res.json();
             if (results.length === 0) { dd.innerHTML = '<p style="padding:10px;color:#888;">Aucun résultat</p>'; dd.style.display = 'block'; return; }
             dd.innerHTML = results.map(r => {
-                let icon = r.type === 'cours' ? '📚' : r.type === 'module' ? '📁' : '📋';
+                let icon = '';
                 return `<div onclick="dd.style.display='none'" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background=''"><strong>${icon} ${r.titre}</strong><br><small style="color:#888;">${r.type} — ${r.description || ''}</small></div>`;
             }).join('');
             dd.style.display = 'block';

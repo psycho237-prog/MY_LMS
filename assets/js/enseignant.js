@@ -84,7 +84,7 @@ function rechercheGlobale(q) {
             let results = await res.json();
             if (results.length === 0) { dd.innerHTML = '<p style="padding:10px;color:#888;">Aucun résultat</p>'; dd.style.display = 'block'; return; }
             dd.innerHTML = results.map(r => {
-                let icon = r.type === 'cours' ? '📚' : r.type === 'module' ? '📁' : '📋';
+                let icon = '';
                 return `<div onclick="dd.style.display='none'" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background=''"><strong>${icon} ${r.titre}</strong><br><small style="color:#888;">${r.type} — ${r.description || ''}</small></div>`;
             }).join('');
             dd.style.display = 'block';
@@ -165,7 +165,7 @@ async function chargerLeconsList(id) {
             html += "<li style='margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;'>";
             html += "<span><strong>" + lecon.titre + "</strong> (" + lecon.type + ") - <a href='" + lecon.url_contenu + "' target='_blank'>Voir le contenu</a></span>";
             html += "<div>";
-            html += "<button onclick='ouvrirReponses(" + lecon.id + ")' style='margin-right:10px; background:#6c757d; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px;'>💬 Q&A</button>";
+            html += "<button onclick='ouvrirReponses(" + lecon.id + ")' style='margin-right:10px; background:#6c757d; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px;'>Q&A</button>";
             html += "<button onclick='ouvrirQuiz(" + lecon.id + ", \"" + lecon.titre + "\")' style='margin-right:10px; background:#17a2b8; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px;'>Ajouter un quiz</button>";
             html += "<button onclick='supprimerLecon(" + lecon.id + ", " + id + ")' style='background:#dc3545; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px;'>Supprimer</button></div>";
             html += "</li>";

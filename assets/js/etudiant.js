@@ -89,7 +89,7 @@ function rechercheGlobale(q) {
             let results = await res.json();
             if (results.length === 0) { dd.innerHTML = '<p style="padding:10px;color:#888;">Aucun résultat</p>'; dd.style.display = 'block'; return; }
             dd.innerHTML = results.map(r => {
-                let icon = r.type === 'cours' ? '📚' : r.type === 'module' ? '📁' : '📋';
+                let icon = '';
                 return `<div onclick="dd.style.display='none'" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background=''"><strong>${icon} ${r.titre}</strong><br><small style="color:#888;">${r.type} — ${r.description || ''}</small></div>`;
             }).join('');
             dd.style.display = 'block';
@@ -223,7 +223,7 @@ async function ouvrirCours(id, titre) {
                 }
             }
             // Bouton Q&A Commentaires
-            html += `<button onclick='ouvrirCommentaires(${lecon.id})' style="margin-top:5px; margin-left:8px; background:#6c757d; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">💬 Q&amp;A</button>`;
+            html += `<button onclick='ouvrirCommentaires(${lecon.id})' style="margin-top:5px; margin-left:8px; background:#6c757d; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">Q&amp;A</button>`;
             html += "</li>";
         }
         html += "</ul>";
@@ -402,7 +402,7 @@ async function soumettreQuiz() {
             fetch('api/notifications.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ user_id: id_etudiant, message: '🎉 Bravo ! Vous avez validé le quiz avec ' + pourcentageScore + '%', lien: null })
+                body: JSON.stringify({ user_id: id_etudiant, message: 'Bravo ! Vous avez validé le quiz avec ' + pourcentageScore + '%', lien: null })
             });
         }
         

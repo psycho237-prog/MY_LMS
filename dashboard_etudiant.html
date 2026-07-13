@@ -12,19 +12,19 @@
         <h1>FONDA WORKPLACE</h1>
         <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
             <div style="position:relative;">
-                <input type="text" id="input_recherche" placeholder="🔍 Rechercher..." oninput="rechercheGlobale(this.value)" style="padding: 6px 12px; border-radius: 20px; border: none; font-size: 0.9rem; width: 200px;">
+                <input type="text" id="input_recherche" placeholder="Rechercher..." oninput="rechercheGlobale(this.value)" style="padding: 6px 12px; border-radius: 20px; border: none; font-size: 0.9rem; width: 200px;">
                 <div id="dropdown_recherche" style="display:none; position:absolute; top:36px; left:0; width:300px; background:white; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.15); z-index:1000; max-height:250px; overflow-y:auto;"></div>
             </div>
             <div style="position:relative;">
                 <button onclick="toggleNotifications()" style="background:none;border:none;cursor:pointer;font-size:1.3rem;position:relative;" title="Notifications">
-                    🔔 <span id="badge_notif" style="display:none;position:absolute;top:-5px;right:-5px;background:red;color:white;border-radius:50%;width:18px;height:18px;font-size:0.65rem;line-height:18px;text-align:center;">0</span>
+                    Notifs <span id="badge_notif" style="display:none;position:absolute;top:-5px;right:-5px;background:red;color:white;border-radius:50%;width:18px;height:18px;font-size:0.65rem;line-height:18px;text-align:center;">0</span>
                 </button>
                 <div id="dropdown_notif" style="display:none;position:absolute;top:40px;right:0;width:300px;background:white;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,0.15);z-index:1000;padding:10px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong>Notifications</strong><button onclick="marquerToutLu()" style="font-size:0.75rem;background:none;border:none;color:#0056b3;cursor:pointer;">Tout lire</button></div>
                     <div id="liste_notif">Chargement...</div>
                 </div>
             </div>
-            <a href="profil.html" style="color:white;font-size:1.3rem;text-decoration:none;" title="Mon profil">👤</a>
+            <a href="profil.html" style="color:white;font-size:1rem;text-decoration:none;" title="Mon profil">Profil</a>
             <span id="nom_utilisateur" style="font-weight: bold;"></span>
             <button onclick="deconnexion()" class="btn-quitter">Déconnexion</button>
         </div>
@@ -112,7 +112,7 @@
         <div class="modal-content" style="width: 80%; max-width: 600px;">
             <span class="close-btn" onclick="fermerModal('passer_quiz_modal')">&times;</span>
             <h2 id="titre_quiz_etudiant">Quiz</h2>
-            <div id="timer_quiz" style="display:none; font-size:1.4rem; font-weight:bold; color:red; text-align:center; margin:10px 0;">⏱ <span id="timer_val">--:--</span></div>
+            <div id="timer_quiz" style="display:none; font-size:1.4rem; font-weight:bold; color:red; text-align:center; margin:10px 0;">Temps restant : <span id="timer_val">--:--</span></div>
             <input type="hidden" id="passer_quiz_eval_id">
             <input type="hidden" id="passer_quiz_lecon_id">
             <div id="contenu_quiz_etudiant" style="margin-top: 15px; text-align: left;">
@@ -126,7 +126,7 @@
     <div id="commentaires_modal" class="modal">
         <div class="modal-content" style="width: 80%; max-width: 650px;">
             <span class="close-btn" onclick="fermerModal('commentaires_modal')">&times;</span>
-            <h2>💬 Questions &amp; Réponses</h2>
+            <h2>Questions &amp; Réponses</h2>
             <input type="hidden" id="comm_lecon_id">
             <div id="liste_commentaires" style="max-height:350px; overflow-y:auto; margin-bottom:15px;"></div>
             <div style="border-top:1px solid #eee; padding-top:15px;">
